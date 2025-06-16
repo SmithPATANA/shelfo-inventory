@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 
@@ -59,7 +59,7 @@ export default function InventoryPage() {
   const pageSize = 8
   const [totalCount, setTotalCount] = useState(0)
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -101,9 +101,11 @@ export default function InventoryPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, pageSize])
 
-  useEffect(() => { fetchProducts() }, [page])
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -194,7 +196,7 @@ export default function InventoryPage() {
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -207,7 +209,7 @@ export default function InventoryPage() {
           <div className="flex gap-2 sm:gap-4">
             <select
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedType(e.target.value)}
               className="rounded-lg border border-gray-300 px-3 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
             >
               <option value="">All Types</option>
@@ -217,7 +219,7 @@ export default function InventoryPage() {
             </select>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
               className="rounded-lg border border-gray-300 px-3 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
             >
               <option value="name">Sort by Name</option>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { handleSupabaseError } from '@/lib/supabase'
 
 interface ProductForm {
   supplier: string
