@@ -86,7 +86,7 @@ export default function InventoryPage() {
         .range(from, to)
       if (error) throw error
       setProducts(
-        (data || []).map((p: Record<string, any>) => ({
+        ((data || []) as Array<{ id: string; name: string; type: string; quantity: number; purchase_price: number; selling_price: number; supplier: string }> ).map((p) => ({
           id: p.id,
           name: p.name,
           type: p.type,
@@ -97,8 +97,8 @@ export default function InventoryPage() {
         }))
       )
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
-        setError((err as any).message)
+      if (err instanceof Error) {
+        setError(err.message)
       } else {
         setError('Failed to fetch products')
       }
@@ -140,8 +140,8 @@ export default function InventoryPage() {
       if (error) throw error
       setProducts(products => products.filter(p => p.id !== id))
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
-        alert('Failed to delete: ' + (err as any).message)
+      if (err instanceof Error) {
+        alert('Failed to delete: ' + err.message)
       } else {
         alert('Failed to delete: Unknown error')
       }
@@ -165,8 +165,8 @@ export default function InventoryPage() {
       setProducts(products => products.map(p => p.id === updated.id ? updated : p))
       setEditProduct(null)
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
-        alert('Failed to update: ' + (err as any).message)
+      if (err instanceof Error) {
+        alert('Failed to update: ' + err.message)
       } else {
         alert('Failed to update: Unknown error')
       }

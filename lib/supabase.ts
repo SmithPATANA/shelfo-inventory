@@ -42,16 +42,6 @@ export const initializeSession = async () => {
   }
 }
 
-// Helper function to handle Supabase errors
-export const handleSupabaseError = (error: unknown) => {
-  console.error('Supabase error:', error)
-  if (error instanceof Error) {
-    throw new Error(error.message || 'An error occurred while interacting with the database')
-  } else {
-    throw new Error('An error occurred while interacting with the database')
-  }
-}
-
 // Type for the response from Supabase
 export type SupabaseResponse<T> = {
   data: T | null

@@ -197,7 +197,7 @@ export default function AddStockPage() {
                   name="productType"
                   value={formData.productType}
                   onChange={handleChange}
-                  placeholder="e.g., Ladies Suits, Men's Trousers, Ankara Dresses, School Uniforms"
+                  placeholder="e.g., Ladies Suits, Men&apos;s Trousers, Ankara Dresses, School Uniforms"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
                 />
               </div>
@@ -214,7 +214,7 @@ export default function AddStockPage() {
                   value={formData.productName}
                   onChange={handleChange}
                   required
-                  placeholder="e.g., Navy Blue Ladies Suit, Checked Men's Blazer, Ankara Maxi Dress"
+                  placeholder="e.g., Navy Blue Ladies Suit, Checked Men&apos;s Blazer, Ankara Maxi Dress"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
                 />
               </div>

@@ -76,15 +76,11 @@ export default function DashboardPage() {
         const { count, error } = await supabase
           .from('products')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id as any)
+          .eq('user_id', user.id)
         if (error) throw error
         setTotalProducts(count || 0)
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message || 'Failed to fetch total products')
-        } else {
-          setError('Failed to fetch total products')
-        }
+      } catch {
+        setError('Failed to fetch total products')
       } finally {
         setLoading(false)
       }
@@ -104,7 +100,7 @@ export default function DashboardPage() {
         const { data, error } = await supabase
           .from('sales')
           .select('total_amount, created_at')
-          .eq('user_id', user.id as any)
+          .eq('user_id', user.id)
         if (error) throw error
         // Filter for current month and sum
         const salesData = (data ?? []) as { total_amount: number; created_at: string }[];
@@ -115,7 +111,7 @@ export default function DashboardPage() {
           })
           .reduce((sum: number, sale: { total_amount: number; created_at: string }) => sum + Number(sale.total_amount), 0)
         setTotalSales(total)
-      } catch (err: unknown) {
+      } catch {
         setTotalSales(0)
       }
     }

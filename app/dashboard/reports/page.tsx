@@ -52,12 +52,10 @@ export default function ReportsPage() {
         const { data, error } = await supabase
           .from('sales')
           .select('id, created_at, product_id, quantity, total_amount')
-          .eq('user_id', user.id as any)
+          .eq('user_id', user.id)
         if (error) throw error
         // Filter out error objects from data
-        const validSales = (data || []).filter((sale): sale is Sale =>
-          sale && typeof sale.id === 'string' && typeof sale.created_at === 'string' && typeof sale.product_id === 'string' && typeof sale.quantity === 'number' && typeof sale.total_amount === 'number'
-        )
+        const validSales = (data || []) as Sale[]
         // Filter by date
         const filtered = validSales.filter((sale) => {
           const saleDate = new Date(sale.created_at)
@@ -84,18 +82,18 @@ export default function ReportsPage() {
           const { data: productsData } = await supabase
             .from('products')
             .select('id, name')
-            .in('id', productIds as any)
-          for (const prod of productsData || []) {
+            .in('id', productIds)
+          for (const prod of (productsData || []) as { id: string; name: string }[]) {
             if (productMap[prod.id]) productMap[prod.id].name = prod.name
           }
         }
         setTopProducts(
           Object.values(productMap)
-            .sort((a: TopProduct, b: TopProduct) => b.sales - a.sales)
+            .sort((a, b) => b.sales - a.sales)
             .slice(0, 5)
         )
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch reports')
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch reports')
       } finally {
         setLoading(false)
       }

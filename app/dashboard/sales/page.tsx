@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 
@@ -34,60 +34,49 @@ export default function SalesPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const user = await getCurrentUser()
-        if (!user) {
-          setError('User not authenticated')
-          setLoading(false)
-          return
-        }
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('user_id', user.id as any)
-        if (error) throw error
-        const validProducts = ((data || []) as any[]).filter((p): p is Product =>
-          p && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.type === 'string' && typeof p.quantity === 'number' && typeof p.selling_price === 'number' && typeof p.purchase_price === 'number' && typeof p.supplier === 'string'
-        )
-        setProducts(
-          validProducts.map((p) => ({
-            id: p.id,
-            name: p.name,
-            type: p.type,
-            quantity: p.quantity,
-            selling_price: p.selling_price,
-            purchase_price: p.purchase_price,
-            supplier: p.supplier,
-          }))
-        )
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message || 'Failed to fetch products')
-        } else {
-          setError('Failed to fetch products')
-        }
-      } finally {
+  const fetchProducts = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const user = await getCurrentUser()
+      if (!user) {
+        setError('User not authenticated')
         setLoading(false)
+        return
       }
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', user.id)
+      if (error) throw error
+      const validProducts = (data || []).filter((p): p is Product =>
+        p && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.type === 'string' && typeof p.quantity === 'number' && typeof p.selling_price === 'number' && typeof p.purchase_price === 'number' && typeof p.supplier === 'string'
+      )
+      setProducts(
+        validProducts.map((p) => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          quantity: p.quantity,
+          selling_price: p.selling_price,
+          purchase_price: p.purchase_price,
+          supplier: p.supplier,
+        }))
+      )
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to fetch products')
+      } else {
+        setError('Failed to fetch products')
+      }
+    } finally {
+      setLoading(false)
     }
-    fetchProducts()
   }, [])
 
   useEffect(() => {
-    const fetchTotalProducts = async () => {
-      const user = await getCurrentUser()
-      if (!user) return
-      const { data, error } = await supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id as any)
-    }
-    fetchTotalProducts()
-  }, [])
+    fetchProducts()
+  }, [fetchProducts])
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,7 +122,7 @@ export default function SalesPage() {
       // 2. Update product quantity
       const { error: updateError } = await supabase.from('products')
         .update({ quantity: selectedProduct.quantity - formData.quantity } as import('@/types/supabase').Database['public']['Tables']['products']['Update'])
-        .eq('id', selectedProduct.id as any)
+        .eq('id', selectedProduct.id)
       if (updateError) throw updateError
 
       setSuccess('Sale recorded and inventory updated!')
