@@ -22,7 +22,6 @@ export default function ReportsPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [salesData, setSalesData] = useState<Sale[]>([])
   const [topProducts, setTopProducts] = useState<TopProduct[]>([])
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [totalOrders, setTotalOrders] = useState(0)
@@ -61,7 +60,6 @@ export default function ReportsPage() {
           const saleDate = new Date(sale.created_at)
           return saleDate >= fromDate && saleDate <= now
         })
-        setSalesData(filtered)
         // Metrics
         const revenue = filtered.reduce((sum: number, sale: Sale) => sum + Number(sale.total_amount), 0)
         setTotalRevenue(revenue)
