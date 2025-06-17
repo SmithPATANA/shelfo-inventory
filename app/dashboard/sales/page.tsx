@@ -9,8 +9,8 @@ interface Product {
   name: string
   type: string
   quantity: number
-  sellingPrice: number
-  purchasePrice: number
+  selling_price: number
+  purchase_price: number
   supplier: string
 }
 
@@ -33,7 +33,6 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [totalProducts, setTotalProducts] = useState(0)
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -51,19 +50,26 @@ export default function SalesPage() {
           .select('*')
           .eq('user_id', user.id as any)
         if (error) throw error
+        const validProducts = ((data || []) as any[]).filter((p): p is Product =>
+          p && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.type === 'string' && typeof p.quantity === 'number' && typeof p.selling_price === 'number' && typeof p.purchase_price === 'number' && typeof p.supplier === 'string'
+        )
         setProducts(
-          (data || []).map((p: any) => ({
+          validProducts.map((p) => ({
             id: p.id,
             name: p.name,
             type: p.type,
             quantity: p.quantity,
-            sellingPrice: p.selling_price,
-            purchasePrice: p.purchase_price,
+            selling_price: p.selling_price,
+            purchase_price: p.purchase_price,
             supplier: p.supplier,
           }))
         )
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch products')
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message || 'Failed to fetch products')
+        } else {
+          setError('Failed to fetch products')
+        }
       } finally {
         setLoading(false)
       }
@@ -77,9 +83,8 @@ export default function SalesPage() {
       if (!user) return
       const { data, error } = await supabase
         .from('products')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-      if (!error) setTotalProducts(data?.length || 0)
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id as any)
     }
     fetchTotalProducts()
   }, [])
@@ -106,12 +111,12 @@ export default function SalesPage() {
     try {
       const user = await getCurrentUser()
       if (!user) throw new Error('User not authenticated')
-      const selectedProduct = products.find(p => p.id === formData.productId)
+      const selectedProduct = products.find((p) => p.id === formData.productId)
       if (!selectedProduct) throw new Error('No product selected')
       if (formData.quantity < 1 || formData.quantity > selectedProduct.quantity) {
         throw new Error('Invalid quantity')
       }
-      const totalAmount = selectedProduct.sellingPrice * formData.quantity
+      const totalAmount = selectedProduct.selling_price * formData.quantity
 
       // 1. Insert sale
       const { error: saleError } = await supabase.from('sales').insert([
@@ -121,13 +126,13 @@ export default function SalesPage() {
           quantity: formData.quantity,
           total_amount: totalAmount,
           notes: formData.notes || null,
-        } as any,
+        } as import('@/types/supabase').Database['public']['Tables']['sales']['Insert'],
       ])
       if (saleError) throw saleError
 
       // 2. Update product quantity
       const { error: updateError } = await supabase.from('products')
-        .update({ quantity: selectedProduct.quantity - formData.quantity } as any)
+        .update({ quantity: selectedProduct.quantity - formData.quantity } as import('@/types/supabase').Database['public']['Tables']['products']['Update'])
         .eq('id', selectedProduct.id as any)
       if (updateError) throw updateError
 
@@ -135,8 +140,12 @@ export default function SalesPage() {
       setTimeout(() => {
         router.push('/dashboard/inventory')
       }, 1200)
-    } catch (err: any) {
-      setError(err.message || 'Failed to record sale')
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to record sale')
+      } else {
+        setError('Failed to record sale')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -229,7 +238,7 @@ export default function SalesPage() {
                       <p className="text-sm text-gray-500 mt-0.5">{product.type}</p>
                     </div>
                     <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 min-w-[120px] w-full sm:w-auto mt-2 sm:mt-0">
-                      <span className="font-semibold text-gray-900">KES {product.sellingPrice.toLocaleString()}</span>
+                      <span className="font-semibold text-gray-900">KES {product.selling_price.toLocaleString()}</span>
                       <span className="text-xs text-gray-500">{product.quantity} in stock</span>
                       <input
                         type="number"
@@ -311,7 +320,7 @@ export default function SalesPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-base font-medium text-gray-700">Total Amount</span>
                       <span className="text-2xl font-bold text-gray-900">
-                        KES {(selectedProduct.sellingPrice * formData.quantity).toLocaleString()}
+                        KES {(selectedProduct.selling_price * formData.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>

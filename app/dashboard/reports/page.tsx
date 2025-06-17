@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 
-interface SalesData {
-  date: string
-  revenue: number
-  orders: number
+interface Sale {
+  id: string;
+  created_at: string;
+  product_id: string;
+  quantity: number;
+  total_amount: number;
 }
 
 interface TopProduct {
-  name: string
-  sales: number
-  revenue: number
+  name: string;
+  sales: number;
+  revenue: number;
 }
 
 export default function ReportsPage() {
@@ -20,8 +22,8 @@ export default function ReportsPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [salesData, setSalesData] = useState<any[]>([])
-  const [topProducts, setTopProducts] = useState<any[]>([])
+  const [salesData, setSalesData] = useState<Sale[]>([])
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([])
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [totalOrders, setTotalOrders] = useState(0)
   const [averageOrderValue, setAverageOrderValue] = useState(0)
@@ -52,19 +54,23 @@ export default function ReportsPage() {
           .select('id, created_at, product_id, quantity, total_amount')
           .eq('user_id', user.id as any)
         if (error) throw error
+        // Filter out error objects from data
+        const validSales = (data || []).filter((sale): sale is Sale =>
+          sale && typeof sale.id === 'string' && typeof sale.created_at === 'string' && typeof sale.product_id === 'string' && typeof sale.quantity === 'number' && typeof sale.total_amount === 'number'
+        )
         // Filter by date
-        const filtered = (data || []).filter((sale: any) => {
+        const filtered = validSales.filter((sale) => {
           const saleDate = new Date(sale.created_at)
           return saleDate >= fromDate && saleDate <= now
         })
         setSalesData(filtered)
         // Metrics
-        const revenue = filtered.reduce((sum: number, sale: any) => sum + Number(sale.total_amount), 0)
+        const revenue = filtered.reduce((sum: number, sale: Sale) => sum + Number(sale.total_amount), 0)
         setTotalRevenue(revenue)
         setTotalOrders(filtered.length)
         setAverageOrderValue(filtered.length > 0 ? revenue / filtered.length : 0)
         // Top products
-        const productMap: Record<string, { name: string; sales: number; revenue: number }> = {}
+        const productMap: Record<string, TopProduct> = {}
         for (const sale of filtered) {
           if (!productMap[sale.product_id]) {
             productMap[sale.product_id] = { name: sale.product_id, sales: 0, revenue: 0 }
@@ -85,7 +91,7 @@ export default function ReportsPage() {
         }
         setTopProducts(
           Object.values(productMap)
-            .sort((a, b) => b.sales - a.sales)
+            .sort((a: TopProduct, b: TopProduct) => b.sales - a.sales)
             .slice(0, 5)
         )
       } catch (err: any) {

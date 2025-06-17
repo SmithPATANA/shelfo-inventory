@@ -2,15 +2,25 @@
 
 import { useState } from 'react'
 
+interface ProductForm {
+  supplier: string
+  productType: string
+  productName: string
+  quantity: number
+  purchasePrice: number
+  sellingPrice: number
+  notes: string
+}
+
 export default function AddStockPage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductForm>({
     supplier: '',
-    type: '',
+    productType: '',
     productName: '',
-    quantity: '',
-    purchasePrice: '',
-    sellingPrice: '',
-    notes: '',
+    quantity: 0,
+    purchasePrice: 0,
+    sellingPrice: 0,
+    notes: ''
   })
   const [loading, setLoading] = useState(false)
 
@@ -56,7 +66,7 @@ export default function AddStockPage() {
                   type="text"
                   name="type"
                   id="type"
-                  value={formData.type}
+                  value={formData.productType}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
                 />

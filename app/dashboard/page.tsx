@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
+import type { Database } from '@/types/supabase'
 
 export default function DashboardPage() {
   const [totalProducts, setTotalProducts] = useState<number | null>(null)
@@ -66,7 +67,7 @@ export default function DashboardPage() {
       setLoading(true)
       setError(null)
       try {
-        const user = await getCurrentUser()
+        const user = await getCurrentUser() as { id: string } | null
         if (!user) {
           setError('User not authenticated')
           setLoading(false)
@@ -78,8 +79,12 @@ export default function DashboardPage() {
           .eq('user_id', user.id as any)
         if (error) throw error
         setTotalProducts(count || 0)
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch total products')
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message || 'Failed to fetch total products')
+        } else {
+          setError('Failed to fetch total products')
+        }
       } finally {
         setLoading(false)
       }
@@ -102,14 +107,15 @@ export default function DashboardPage() {
           .eq('user_id', user.id as any)
         if (error) throw error
         // Filter for current month and sum
-        const total = (data || [])
-          .filter((sale: any) => {
+        const salesData = (data ?? []) as { total_amount: number; created_at: string }[];
+        const total = salesData
+          .filter((sale: { total_amount: number; created_at: string }) => {
             const saleDate = new Date(sale.created_at)
             return saleDate >= firstDay && saleDate <= lastDay
           })
-          .reduce((sum: number, sale: any) => sum + Number(sale.total_amount), 0)
+          .reduce((sum: number, sale: { total_amount: number; created_at: string }) => sum + Number(sale.total_amount), 0)
         setTotalSales(total)
-      } catch (err: any) {
+      } catch (err: unknown) {
         setTotalSales(0)
       }
     }

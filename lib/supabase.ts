@@ -21,13 +21,6 @@ export const supabase = createClient<Database>(
       storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       storageKey: 'shelfo-auth-token',
       debug: process.env.NODE_ENV === 'development',
-      cookieOptions: {
-        name: 'sb-auth-token',
-        lifetime: 60 * 60 * 24 * 7, // 7 days
-        domain: '',
-        path: '/',
-        sameSite: 'lax'
-      }
     },
     global: {
       headers: {
@@ -50,9 +43,13 @@ export const initializeSession = async () => {
 }
 
 // Helper function to handle Supabase errors
-export const handleSupabaseError = (error: any) => {
+export const handleSupabaseError = (error: unknown) => {
   console.error('Supabase error:', error)
-  throw new Error(error.message || 'An error occurred while interacting with the database')
+  if (error instanceof Error) {
+    throw new Error(error.message || 'An error occurred while interacting with the database')
+  } else {
+    throw new Error('An error occurred while interacting with the database')
+  }
 }
 
 // Type for the response from Supabase

@@ -73,7 +73,7 @@ export default function InventoryPage() {
       const { count: total, error: countError } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id as any)
+        .eq('user_id', user.id as string)
       if (countError) throw countError
       setTotalCount(total || 0)
       // Fetch paginated products
@@ -82,11 +82,11 @@ export default function InventoryPage() {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', user.id as any)
+        .eq('user_id', user.id as string)
         .range(from, to)
       if (error) throw error
       setProducts(
-        (data || []).map((p: any) => ({
+        (data || []).map((p: Record<string, any>) => ({
           id: p.id,
           name: p.name,
           type: p.type,
@@ -96,8 +96,12 @@ export default function InventoryPage() {
           supplier: p.supplier,
         }))
       )
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch products')
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
+        setError((err as any).message)
+      } else {
+        setError('Failed to fetch products')
+      }
     } finally {
       setLoading(false)
     }
@@ -135,8 +139,12 @@ export default function InventoryPage() {
       const { error } = await supabase.from('products').delete().eq('id', id)
       if (error) throw error
       setProducts(products => products.filter(p => p.id !== id))
-    } catch (err: any) {
-      alert('Failed to delete: ' + (err.message || err))
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
+        alert('Failed to delete: ' + (err as any).message)
+      } else {
+        alert('Failed to delete: Unknown error')
+      }
     } finally {
       setDeletingId(null)
     }
@@ -156,8 +164,12 @@ export default function InventoryPage() {
       if (error) throw error
       setProducts(products => products.map(p => p.id === updated.id ? updated : p))
       setEditProduct(null)
-    } catch (err: any) {
-      alert('Failed to update: ' + (err.message || err))
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
+        alert('Failed to update: ' + (err as any).message)
+      } else {
+        alert('Failed to update: Unknown error')
+      }
     }
   }
 
