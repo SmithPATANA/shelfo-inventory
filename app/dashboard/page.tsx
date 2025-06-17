@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
-import type { Database } from '@/types/supabase'
 
 export default function DashboardPage() {
   const [totalProducts, setTotalProducts] = useState<number | null>(null)
