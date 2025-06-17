@@ -23,7 +23,7 @@ export default function LandingPage() {
             <div className="flex-shrink-0 flex items-center">
               <span className="text-2xl font-extrabold text-[#635bff] tracking-tight">Shelfo</span>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+            <div className="flex flex-row gap-2 sm:gap-4 w-full sm:w-auto justify-end">
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center px-4 py-2 border border-[#635bff] text-base font-medium rounded-lg text-[#635bff] bg-white hover:bg-[#f5f7fa] transition-all duration-150 w-full sm:w-auto"
@@ -46,32 +46,26 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
             <main className="mt-8 mx-auto max-w-7xl px-2 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-3xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block">Manage your inventory</span>
-                  <span className="block text-[#635bff]">with ease</span>
+              <div className="flex flex-col items-center text-center lg:text-left lg:items-start">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight font-extrabold text-gray-900 mb-4">
+                  Manage your inventory with ease
                 </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  Shelfo helps small business owners track stock entries and sales effortlessly. 
-                  No technical skills required, optimized for mobile-first use.
+                <p className="mb-6 text-base text-gray-500 sm:text-lg sm:max-w-xl md:text-xl">
+                  Shelfo helps small business owners track stock entries and sales effortlessly. No technical skills required, optimized for mobile-first use.
                 </p>
-                <div className="mt-5 sm:mt-8 flex flex-col sm:flex-row sm:justify-center lg:justify-start gap-3 sm:gap-0">
-                  <div className="rounded-md shadow">
-                    <Link
-                      href="/signup"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#635bff] hover:bg-[#4f46e5] md:py-4 md:text-lg md:px-10"
-                    >
-                      Get started
-                    </Link>
-                  </div>
-                  <div className="sm:mt-0 sm:ml-3">
-                    <Link
-                      href="/login"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-[#635bff] bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
-                    >
-                      Sign in
-                    </Link>
-                  </div>
+                <div className="flex flex-col w-full gap-3 sm:flex-row sm:justify-center lg:justify-start sm:w-auto">
+                  <Link
+                    href="/signup"
+                    className="w-full sm:w-auto flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#635bff] hover:bg-[#4f46e5] md:py-4 md:text-lg md:px-10"
+                  >
+                    Get started
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="w-full sm:w-auto flex items-center justify-center px-8 py-3 border border-[#635bff] text-base font-medium rounded-md text-[#635bff] bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                  >
+                    Sign in
+                  </Link>
                 </div>
               </div>
             </main>
