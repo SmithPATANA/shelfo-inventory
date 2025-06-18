@@ -182,7 +182,7 @@ export default function AddStockPage() {
                   value={formData.supplier}
                   onChange={handleChange}
                   placeholder="e.g., Eastleigh Wholesalers, Gikomba Market, Kamukunji Traders"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -198,7 +198,7 @@ export default function AddStockPage() {
                   value={formData.productType}
                   onChange={handleChange}
                   placeholder="e.g., Ladies Suits, Men&apos;s Trousers, Ankara Dresses, School Uniforms"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -215,7 +215,7 @@ export default function AddStockPage() {
                   onChange={handleChange}
                   required
                   placeholder="e.g., Navy Blue Ladies Suit, Checked Men&apos;s Blazer, Ankara Maxi Dress"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -235,7 +235,7 @@ export default function AddStockPage() {
                     min="1"
                     step="1"
                     placeholder="e.g., 10"
-                    className="block w-full rounded-md border-gray-300 pr-12 focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                    className="block w-full rounded-md border-gray-300 pr-12 focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                     <span className="text-gray-500 sm:text-sm">units</span>
@@ -262,7 +262,7 @@ export default function AddStockPage() {
                     min="0"
                     step="0.01"
                     placeholder="e.g., 2500.00"
-                    className="block w-full rounded-md border-gray-300 pl-12 focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                    className="block w-full rounded-md border-gray-300 pl-12 focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                   />
                 </div>
               </div>
@@ -285,7 +285,7 @@ export default function AddStockPage() {
                     min="0"
                     step="0.01"
                     placeholder="e.g., 3500.00"
-                    className="block w-full rounded-md border-gray-300 pl-12 focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                    className="block w-full rounded-md border-gray-300 pl-12 focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                   />
                 </div>
               </div>
@@ -322,7 +322,7 @@ export default function AddStockPage() {
                   value={formData.notes}
                   onChange={handleChange}
                   placeholder="e.g., Size: 10, Color: Maroon, Supplier: Gikomba, Special instructions: Dry clean only"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#635bff] focus:ring-[#635bff] sm:text-sm text-gray-900"
                 />
               </div>
             </div>

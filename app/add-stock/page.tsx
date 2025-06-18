@@ -54,7 +54,7 @@ export default function AddStockPage() {
                   id="supplier"
                   value={formData.supplier}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -68,7 +68,7 @@ export default function AddStockPage() {
                   id="type"
                   value={formData.productType}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -83,7 +83,7 @@ export default function AddStockPage() {
                   required
                   value={formData.productName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -99,7 +99,7 @@ export default function AddStockPage() {
                   min="0"
                   value={formData.quantity}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -115,7 +115,7 @@ export default function AddStockPage() {
                   step="0.01"
                   value={formData.purchasePrice}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -131,7 +131,7 @@ export default function AddStockPage() {
                   step="0.01"
                   value={formData.sellingPrice}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
 
@@ -145,7 +145,7 @@ export default function AddStockPage() {
                   rows={3}
                   value={formData.notes}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm text-gray-900"
                 />
               </div>
             </div>

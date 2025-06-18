@@ -30,12 +30,12 @@ function EditModal({ product, onClose, onSave }: EditModalProps) {
       <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
         <h2 className="text-lg font-bold mb-4">Edit Product</h2>
         <div className="space-y-3">
-          <input className="w-full border rounded p-2" placeholder="Name" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} />
-          <input className="w-full border rounded p-2" placeholder="Type" value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))} />
-          <input className="w-full border rounded p-2" placeholder="Supplier" value={form.supplier} onChange={e => setForm(f => ({...f, supplier: e.target.value}))} />
-          <input className="w-full border rounded p-2" type="number" placeholder="Quantity" value={form.quantity} onChange={e => setForm(f => ({...f, quantity: Number(e.target.value)}))} />
-          <input className="w-full border rounded p-2" type="number" placeholder="Purchase Price" value={form.purchasePrice} onChange={e => setForm(f => ({...f, purchasePrice: Number(e.target.value)}))} />
-          <input className="w-full border rounded p-2" type="number" placeholder="Selling Price" value={form.sellingPrice} onChange={e => setForm(f => ({...f, sellingPrice: Number(e.target.value)}))} />
+          <input className="w-full border rounded p-2 text-gray-900" placeholder="Name" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} />
+          <input className="w-full border rounded p-2 text-gray-900" placeholder="Type" value={form.type} onChange={e => setForm(f => ({...f, type: e.target.value}))} />
+          <input className="w-full border rounded p-2 text-gray-900" placeholder="Supplier" value={form.supplier} onChange={e => setForm(f => ({...f, supplier: e.target.value}))} />
+          <input className="w-full border rounded p-2 text-gray-900" type="number" placeholder="Quantity" value={form.quantity} onChange={e => setForm(f => ({...f, quantity: Number(e.target.value)}))} />
+          <input className="w-full border rounded p-2 text-gray-900" type="number" placeholder="Purchase Price" value={form.purchasePrice} onChange={e => setForm(f => ({...f, purchasePrice: Number(e.target.value)}))} />
+          <input className="w-full border rounded p-2 text-gray-900" type="number" placeholder="Selling Price" value={form.sellingPrice} onChange={e => setForm(f => ({...f, sellingPrice: Number(e.target.value)}))} />
         </div>
         <div className="flex gap-2 mt-5">
           <button className="flex-1 py-2 rounded bg-gray-200" onClick={onClose}>Cancel</button>
@@ -209,7 +209,7 @@ export default function InventoryPage() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm"
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
