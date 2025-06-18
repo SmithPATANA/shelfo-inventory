@@ -84,20 +84,12 @@ export default function SalesRecordsPage() {
 
       if (error) throw error
 
-      const validRecords = (data || []).filter((record): record is SaleRecord =>
-        record && 
-        typeof record.id === 'string' &&
-        typeof record.created_at === 'string' &&
-        typeof record.quantity === 'number' &&
-        typeof record.total_amount === 'number' &&
-        record.product &&
-        typeof record.product.id === 'string' &&
-        typeof record.product.name === 'string' &&
-        typeof record.product.type === 'string' &&
-        typeof record.product.selling_price === 'number'
+      setSalesRecords(
+        (data || []).map((record: any) => ({
+          ...record,
+          product: Array.isArray(record.product) ? record.product[0] : record.product
+        })) as SaleRecord[]
       )
-
-      setSalesRecords(validRecords)
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || 'Failed to fetch sales records')
