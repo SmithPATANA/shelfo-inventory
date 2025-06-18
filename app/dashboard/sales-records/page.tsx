@@ -18,21 +18,6 @@ interface SaleRecord {
   }
 }
 
-// Type predicate for SaleRecord
-const isSaleRecord = (item: any): item is SaleRecord => (
-  typeof item.id === "string" &&
-  typeof item.created_at === "string" &&
-  typeof item.quantity === "number" &&
-  typeof item.total_amount === "number" &&
-  (typeof item.notes === "string" || item.notes === null) &&
-  typeof item.product === "object" &&
-  item.product !== null &&
-  typeof item.product.id === "string" &&
-  typeof item.product.name === "string" &&
-  typeof item.product.type === "string" &&
-  typeof item.product.selling_price === "number"
-)
-
 export default function SalesRecordsPage() {
   const [salesRecords, setSalesRecords] = useState<SaleRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,10 +85,10 @@ export default function SalesRecordsPage() {
       if (error) throw error
 
       setSalesRecords(
-        ((data || []).map((record: any) => ({
+        (data || []).map((record: any) => ({
           ...record,
           product: Array.isArray(record.product) ? record.product[0] : record.product
-        })).filter(isSaleRecord))
+        })) as SaleRecord[]
       )
     } catch (err) {
       if (err instanceof Error) {
