@@ -18,6 +18,16 @@ interface SaleRecord {
   }
 }
 
+type RawSaleRecord = {
+  id?: unknown;
+  created_at?: unknown;
+  quantity?: unknown;
+  total_amount?: unknown;
+  notes?: unknown;
+  product?: unknown;
+  [key: string]: unknown;
+};
+
 export default function SalesRecordsPage() {
   const [salesRecords, setSalesRecords] = useState<SaleRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,7 +95,7 @@ export default function SalesRecordsPage() {
       if (error) throw error
 
       setSalesRecords(
-        (data || []).map((record: any) => ({
+        (data || []).map((record: RawSaleRecord) => ({
           ...record,
           product: Array.isArray(record.product) ? record.product[0] : record.product
         })) as SaleRecord[]
