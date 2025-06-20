@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from './supabase-server'
 import { redirect } from 'next/navigation'
 
 export async function getSession() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   try {
     const { data: { session }, error } = await supabase.auth.getSession()
     if (error) {
@@ -25,7 +25,7 @@ export async function requireAuth() {
 }
 
 export async function getUser() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) {
@@ -40,7 +40,7 @@ export async function getUser() {
 }
 
 export async function getUserProfile() {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
