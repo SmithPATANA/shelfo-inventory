@@ -154,9 +154,17 @@ export default function AddStockPage() {
     <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Add Stock</h1>
           <p className="mt-2 text-sm text-gray-600">Add new items to your inventory</p>
+          <div className="mt-4">
+            <a
+              href="/dashboard"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              ← Back to Dashboard
+            </a>
+          </div>
         </div>
 
         {/* Error Message */}
