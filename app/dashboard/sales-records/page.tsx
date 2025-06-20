@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -35,11 +35,7 @@ export default function SalesRecordsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'today' | 'week' | 'month'>('all')
 
-  useEffect(() => {
-    fetchSalesRecords()
-  }, [filterType])
-
-  const fetchSalesRecords = async () => {
+  const fetchSalesRecords = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -109,7 +105,11 @@ export default function SalesRecordsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterType])
+
+  useEffect(() => {
+    fetchSalesRecords()
+  }, [fetchSalesRecords])
 
   const filteredRecords = salesRecords.filter(record =>
     record.product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -120,23 +120,23 @@ export default function SalesRecordsPage() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return {
-      date: date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+      date: date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       }),
-      time: date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      time: date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
       })
     }
   }
 
-  const getTotalSales = () => {
+  const getTotalRevenue = () => {
     return filteredRecords.reduce((sum, record) => sum + record.total_amount, 0)
   }
 
-  const getTotalQuantity = () => {
+  const getTotalItemsSold = () => {
     return filteredRecords.reduce((sum, record) => sum + record.quantity, 0)
   }
 
@@ -154,9 +154,9 @@ export default function SalesRecordsPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+        <div className="text-center p-4">
           <div className="text-red-600 text-lg mb-4">{error}</div>
-          <button 
+          <button
             onClick={fetchSalesRecords}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -168,202 +168,183 @@ export default function SalesRecordsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Header with gradient background */}
-      <div className="bg-gradient-to-r from-[#635bff] to-[#4f46e5] px-4 py-8 sm:px-6 sm:py-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white">Sales Records</h1>
-              <p className="mt-2 text-lg text-blue-100">View all your sales history and transactions</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sales Records</h1>
+              <p className="mt-1 text-sm text-gray-500">View and manage all your sales history.</p>
             </div>
-            <div className="hidden sm:block">
-              <svg className="w-16 h-16 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
+            <Link
+                href="/dashboard/sales"
+                className="inline-flex items-center justify-center w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Record New Sale
+              </Link>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
-        {/* Action Bar */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/dashboard/sales"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Record New Sale
-            </Link>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search and Filter */}
+        <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              placeholder="Search by product or notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-          
-          {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search products or notes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as 'all' | 'today' | 'week' | 'month')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-          </div>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value as 'all' | 'today' | 'week' | 'month')}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">
-                  {filteredRecords.length}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">
-                  KES {getTotalSales().toLocaleString()}
-                </p>
-              </div>
-              <div className="p-3 bg-green-50 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Items Sold</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">
-                  {getTotalQuantity()}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <StatCard title="Total Transactions" value={filteredRecords.length.toString()} icon="document" />
+          <StatCard title="Total Revenue" value={`KES ${getTotalRevenue().toLocaleString()}`} icon="currency" />
+          <StatCard title="Items Sold" value={getTotalItemsSold().toString()} icon="inventory" />
         </div>
 
-        {/* Sales Records Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Sales History */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Sales History</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Sales History</h2>
           </div>
-          
           {filteredRecords.length === 0 ? (
-            <div className="p-8 text-center">
-              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-gray-500 text-lg">No sales records found</p>
-              <p className="text-gray-400 mt-2">Start recording sales to see them here</p>
+            <div className="p-8 text-center text-gray-500">
+              <p className="mb-2">No sales records found for the selected period.</p>
+              <p className="text-sm">Try adjusting your filters or record a new sale.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date & Time
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Unit Price
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Notes
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+            <div>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredRecords.map((record) => {
+                      const { date, time } = formatDate(record.created_at)
+                      return (
+                        <tr key={record.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{date}</div>
+                            <div className="text-sm text-gray-500">{time}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{record.product.name}</div>
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                              {record.product.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-800">{record.quantity}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">KES {record.total_amount.toLocaleString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">{record.notes || '-'}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List */}
+              <div className="md:hidden">
+                <ul className="divide-y divide-gray-200">
                   {filteredRecords.map((record) => {
                     const { date, time } = formatDate(record.created_at)
                     return (
-                      <tr key={record.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{date}</div>
-                            <div className="text-sm text-gray-500">{time}</div>
+                      <li key={record.id} className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900">{record.product.name}</p>
+                            <span className="inline-flex mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                              {record.product.type}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{record.product.name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {record.product.type}
+                          <p className="text-sm font-bold text-green-600">KES {record.total_amount.toLocaleString()}</p>
+                        </div>
+                        <div className="mt-3 text-sm text-gray-600 flex justify-between">
+                          <span>Qty: <span className="font-medium">{record.quantity}</span></span>
+                          <span className="text-right">
+                            <p>{date}</p>
+                            <p>{time}</p>
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {record.quantity}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          KES {record.product.selling_price.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-green-600">
-                            KES {record.total_amount.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 max-w-xs truncate">
-                            {record.notes || '-'}
-                          </div>
-                        </td>
-                      </tr>
+                        </div>
+                        {record.notes && (
+                           <p className="mt-2 text-sm text-gray-500 italic bg-gray-50 p-2 rounded">Note: {record.notes}</p>
+                        )}
+                      </li>
                     )
                   })}
-                </tbody>
-              </table>
+                </ul>
+              </div>
             </div>
           )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function StatCard({ title, value, icon }: { title: string, value: string, icon: 'document' | 'currency' | 'inventory' }) {
+  const icons = {
+    document: (
+      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    currency: (
+       <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    inventory: (
+       <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+      </svg>
+    )
+  }
+  
+  const bgColors = {
+      document: 'bg-blue-50',
+      currency: 'bg-green-50',
+      inventory: 'bg-purple-50'
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`p-3 rounded-full ${bgColors[icon]}`}>
+          {icons[icon]}
         </div>
       </div>
     </div>
