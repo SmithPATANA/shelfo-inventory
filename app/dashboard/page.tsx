@@ -177,7 +177,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-5 sm:p-6">
+          <Link href="/dashboard/sales-records" className="block bg-white rounded-xl shadow-sm p-5 sm:p-6 hover:bg-gray-50 transition-colors">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Sales</p>
@@ -192,7 +192,7 @@ export default function DashboardPage() {
                 </svg>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Quick Actions */}
