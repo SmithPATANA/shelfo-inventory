@@ -74,6 +74,7 @@ export default function InventoryPage() {
         .from('products')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id as string)
+        .gt('quantity', 0)
       if (countError) throw countError
       setTotalCount(total || 0)
       // Fetch paginated products
@@ -83,6 +84,7 @@ export default function InventoryPage() {
         .from('products')
         .select('*')
         .eq('user_id', user.id as string)
+        .gt('quantity', 0)
         .range(from, to)
       if (error) throw error
       setProducts(
