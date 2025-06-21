@@ -59,7 +59,7 @@ export default function InventoryPage() {
   const [page, setPage] = useState(1)
   const pageSize = 8
   const [totalCount, setTotalCount] = useState(0)
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [activeSearch, setActiveSearch] = useState('')
 
   const fetchProducts = useCallback(async (searchTerm?: string, typeFilter?: string) => {
     setLoading(true)
@@ -139,46 +139,48 @@ export default function InventoryPage() {
     }
   }, [page, pageSize, sortBy])
 
-  // Debounced search effect
+  // Handle manual search
+  const handleSearch = () => {
+    setSearchLoading(true)
+    setPage(1) // Reset to first page when searching
+    setActiveSearch(searchQuery)
+    fetchProducts(searchQuery, selectedType)
+  }
+
+  // Handle clear search
+  const handleClearSearch = () => {
+    setSearchQuery('')
+    setActiveSearch('')
+    setPage(1)
+    fetchProducts('', selectedType)
+  }
+
+  // Handle Enter key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
+
+  // Effect for type filter changes
   useEffect(() => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout)
-    }
-
-    // Only search if query has minimum length or is empty (to show all results)
-    const shouldSearch = searchQuery.length === 0 || searchQuery.trim().length >= 2
-
-    if (shouldSearch) {
-      setSearchLoading(true)
-      const timeout = setTimeout(() => {
-        setPage(1) // Reset to first page when searching
-        fetchProducts(searchQuery, selectedType)
-      }, 3000) // 3000ms debounce for better UX
-
-      setSearchTimeout(timeout)
-
-      return () => {
-        if (timeout) clearTimeout(timeout)
-      }
-    } else {
-      // If search query is too short, show loading state briefly
-      setSearchLoading(true)
-      const timeout = setTimeout(() => {
-        setSearchLoading(false)
-      }, 300)
-      setSearchTimeout(timeout)
-    }
-  }, [searchQuery, selectedType, fetchProducts])
+    fetchProducts(activeSearch, selectedType)
+  }, [selectedType, fetchProducts])
 
   // Effect for sort changes
   useEffect(() => {
-    fetchProducts(searchQuery, selectedType)
+    fetchProducts(activeSearch, selectedType)
   }, [sortBy, fetchProducts])
 
   // Effect for page changes
   useEffect(() => {
-    fetchProducts(searchQuery, selectedType)
+    fetchProducts(activeSearch, selectedType)
   }, [page, fetchProducts])
+
+  // Initial load
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   // Delete handler
   const handleDelete = async (id: string) => {
@@ -187,7 +189,7 @@ export default function InventoryPage() {
       const { error } = await supabase.from('products').delete().eq('id', id)
       if (error) throw error
       // Refresh the current page after deletion
-      fetchProducts(searchQuery, selectedType)
+      fetchProducts(activeSearch, selectedType)
     } catch (err: unknown) {
       if (err instanceof Error) {
         alert('Failed to delete: ' + err.message)
@@ -212,7 +214,7 @@ export default function InventoryPage() {
       }).eq('id', updated.id)
       if (error) throw error
       // Refresh the current page after update
-      fetchProducts(searchQuery, selectedType)
+      fetchProducts(activeSearch, selectedType)
       setEditProduct(null)
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -253,30 +255,41 @@ export default function InventoryPage() {
         {/* Action Bar */}
         <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
-            <div className="relative">
+            <div className="relative flex">
               <input
                 type="text"
-                placeholder="Search products (min. 2 characters)..."
+                placeholder="Search products by name, type, or supplier..."
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 pl-10 pr-10 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
+                onKeyPress={handleKeyPress}
+                className="flex-1 rounded-l-lg border border-gray-300 pl-4 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
               />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <button
+                onClick={handleSearch}
+                disabled={searchLoading}
+                className="px-4 py-2 bg-[#635bff] text-white rounded-r-lg hover:bg-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 {searchLoading ? (
-                  <svg className="animate-spin h-5 w-5 text-[#635bff]" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                 ) : (
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 )}
-              </div>
-              {searchQuery.length > 0 && searchQuery.length < 2 && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span className="text-xs text-gray-400">Type more...</span>
-                </div>
+              </button>
+              {activeSearch && (
+                <button
+                  onClick={handleClearSearch}
+                  className="ml-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors"
+                  title="Clear search"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               )}
             </div>
           </div>
@@ -304,11 +317,11 @@ export default function InventoryPage() {
         </div>
 
         {/* Search Results Info */}
-        {(searchQuery || selectedType) && (
+        {(activeSearch || selectedType) && (
           <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
               Showing {totalCount} result{totalCount !== 1 ? 's' : ''} 
-              {searchQuery && ` for "${searchQuery}"`}
+              {activeSearch && ` for "${activeSearch}"`}
               {selectedType && ` in ${selectedType}`}
             </p>
           </div>
@@ -395,10 +408,10 @@ export default function InventoryPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">
-              {searchQuery || selectedType ? 'No products found' : 'No products yet'}
+              {activeSearch || selectedType ? 'No products found' : 'No products yet'}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchQuery || selectedType 
+              {activeSearch || selectedType 
                 ? 'Try adjusting your search criteria or filters.'
                 : 'Get started by adding some products to your inventory.'
               }
