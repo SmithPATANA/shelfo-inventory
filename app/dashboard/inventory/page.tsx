@@ -380,24 +380,94 @@ export default function InventoryPage() {
 
         {/* Pagination Controls */}
         {totalCount > pageSize && (
-          <div className="flex justify-center items-center gap-4 mt-8">
+          <div className="flex justify-center items-center gap-2 mt-8">
+            {/* Previous Button */}
             <button
-              className="px-4 py-2 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
+              className="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              Previous
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-            <span className="text-gray-700 font-medium">
-              Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
-            </span>
+
+            {/* Page Numbers */}
+            {(() => {
+              const totalPages = Math.ceil(totalCount / pageSize)
+              const maxVisiblePages = 7
+              const pages: (number | string)[] = []
+
+              if (totalPages <= maxVisiblePages) {
+                // Show all pages if total is small
+                for (let i = 1; i <= totalPages; i++) {
+                  pages.push(i)
+                }
+              } else {
+                // Show smart pagination with ellipsis
+                if (page <= 4) {
+                  // Near the beginning
+                  for (let i = 1; i <= 5; i++) {
+                    pages.push(i)
+                  }
+                  pages.push('...')
+                  pages.push(totalPages)
+                } else if (page >= totalPages - 3) {
+                  // Near the end
+                  pages.push(1)
+                  pages.push('...')
+                  for (let i = totalPages - 4; i <= totalPages; i++) {
+                    pages.push(i)
+                  }
+                } else {
+                  // In the middle
+                  pages.push(1)
+                  pages.push('...')
+                  for (let i = page - 1; i <= page + 1; i++) {
+                    pages.push(i)
+                  }
+                  pages.push('...')
+                  pages.push(totalPages)
+                }
+              }
+
+              return pages.map((pageNum, index) => (
+                <div key={index}>
+                  {pageNum === '...' ? (
+                    <span className="px-3 py-2 text-gray-500">...</span>
+                  ) : (
+                    <button
+                      className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                        page === pageNum
+                          ? 'bg-[#635bff] text-white'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                      onClick={() => setPage(pageNum as number)}
+                    >
+                      {pageNum}
+                    </button>
+                  )}
+                </div>
+              ))
+            })()}
+
+            {/* Next Button */}
             <button
-              className="px-4 py-2 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
+              className="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= Math.ceil(totalCount / pageSize)}
             >
-              Next
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
+          </div>
+        )}
+
+        {/* Page Info */}
+        {totalCount > pageSize && (
+          <div className="text-center mt-4 text-sm text-gray-600">
+            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalCount)} of {totalCount} products
           </div>
         )}
 
