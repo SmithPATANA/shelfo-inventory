@@ -253,51 +253,56 @@ export default function InventoryPage() {
 
       <div className="max-w-7xl mx-auto px-2 py-4 sm:px-4 sm:py-8">
         {/* Action Bar */}
-        <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="flex-1">
-            <div className="relative flex">
-              <input
-                type="text"
-                placeholder="Search products by name, type, or supplier..."
-                value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="flex-1 rounded-l-lg border border-gray-300 pl-4 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
-              />
-              <button
-                onClick={handleSearch}
-                disabled={searchLoading}
-                className="px-4 py-2 bg-[#635bff] text-white rounded-r-lg hover:bg-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {searchLoading ? (
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                ) : (
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                )}
-              </button>
-              {activeSearch && (
+        <div className="mb-4 flex flex-col gap-3">
+          {/* Search Bar */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <div className="relative flex">
+                <input
+                  type="text"
+                  placeholder="Search products by name, type, or supplier..."
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-1 rounded-l-lg border border-gray-300 pl-4 pr-4 py-3 sm:py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
+                />
                 <button
-                  onClick={handleClearSearch}
-                  className="ml-2 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors"
-                  title="Clear search"
+                  onClick={handleSearch}
+                  disabled={searchLoading}
+                  className="px-4 py-3 sm:py-2 bg-[#635bff] text-white rounded-r-lg hover:bg-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  {searchLoading ? (
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
                 </button>
-              )}
+                {activeSearch && (
+                  <button
+                    onClick={handleClearSearch}
+                    className="ml-2 px-3 py-3 sm:py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors"
+                    title="Clear search"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex gap-2 sm:gap-4">
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <select
               value={selectedType}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedType(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
+              className="w-full sm:w-auto rounded-lg border border-gray-300 px-3 py-3 sm:py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
             >
               <option value="">All Types</option>
               <option value="Running Shoes">Running Shoes</option>
@@ -307,7 +312,7 @@ export default function InventoryPage() {
             <select
               value={sortBy}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
+              className="w-full sm:w-auto rounded-lg border border-gray-300 px-3 py-3 sm:py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
             >
               <option value="name">Sort by Name</option>
               <option value="quantity">Sort by Quantity</option>
@@ -332,22 +337,22 @@ export default function InventoryPage() {
           {products.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-4 flex flex-col justify-between min-h-[210px] border border-gray-100"
+              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-4 sm:p-4 flex flex-col justify-between min-h-[200px] sm:min-h-[210px] border border-gray-100"
             >
               <div className="flex flex-col gap-2 flex-1">
                 <div className="flex justify-between items-start mb-1">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 capitalize leading-tight">{product.name}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold text-gray-900 capitalize leading-tight truncate">{product.name}</h3>
                     <p className="text-xs text-gray-500 mt-0.5 mb-1">{product.type}</p>
                   </div>
-                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 whitespace-nowrap">
+                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 whitespace-nowrap ml-2">
                     {product.quantity}
                   </span>
                 </div>
                 <div className="mt-1 space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Supplier</span>
-                    <span className="text-gray-900 font-medium">{product.supplier}</span>
+                    <span className="text-gray-900 font-medium truncate ml-2">{product.supplier}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Purchase Price</span>
@@ -361,13 +366,13 @@ export default function InventoryPage() {
               </div>
               <div className="mt-4 flex gap-2">
                 <button
-                  className="flex-1 px-4 py-2 text-xs sm:text-sm font-semibold text-[#635bff] bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none transition"
+                  className="flex-1 px-4 py-3 sm:py-2 text-xs sm:text-sm font-semibold text-[#635bff] bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none transition active:bg-blue-200"
                   onClick={() => setEditProduct(product)}
                 >
                   Edit
                 </button>
                 <button
-                  className="flex-1 px-4 py-2 text-xs sm:text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none transition"
+                  className="flex-1 px-4 py-3 sm:py-2 text-xs sm:text-sm font-semibold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none transition active:bg-red-200"
                   onClick={() => handleDelete(product.id)}
                   disabled={deletingId === product.id}
                 >
@@ -380,87 +385,170 @@ export default function InventoryPage() {
 
         {/* Pagination Controls */}
         {totalCount > pageSize && (
-          <div className="flex justify-center items-center gap-2 mt-8">
-            {/* Previous Button */}
-            <button
-              className="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+          <div className="mt-8">
+            {/* Desktop Pagination */}
+            <div className="hidden md:flex justify-center items-center gap-2">
+              {/* Previous Button */}
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </button>
 
-            {/* Page Numbers */}
-            {(() => {
-              const totalPages = Math.ceil(totalCount / pageSize)
-              const maxVisiblePages = 7
-              const pages: (number | string)[] = []
+              {/* Page Numbers */}
+              {(() => {
+                const totalPages = Math.ceil(totalCount / pageSize)
+                const maxVisiblePages = 7
+                const pages: (number | string)[] = []
 
-              if (totalPages <= maxVisiblePages) {
-                // Show all pages if total is small
-                for (let i = 1; i <= totalPages; i++) {
-                  pages.push(i)
-                }
-              } else {
-                // Show smart pagination with ellipsis
-                if (page <= 4) {
-                  // Near the beginning
-                  for (let i = 1; i <= 5; i++) {
-                    pages.push(i)
-                  }
-                  pages.push('...')
-                  pages.push(totalPages)
-                } else if (page >= totalPages - 3) {
-                  // Near the end
-                  pages.push(1)
-                  pages.push('...')
-                  for (let i = totalPages - 4; i <= totalPages; i++) {
+                if (totalPages <= maxVisiblePages) {
+                  // Show all pages if total is small
+                  for (let i = 1; i <= totalPages; i++) {
                     pages.push(i)
                   }
                 } else {
-                  // In the middle
-                  pages.push(1)
-                  pages.push('...')
-                  for (let i = page - 1; i <= page + 1; i++) {
+                  // Show smart pagination with ellipsis
+                  if (page <= 4) {
+                    // Near the beginning
+                    for (let i = 1; i <= 5; i++) {
+                      pages.push(i)
+                    }
+                    pages.push('...')
+                    pages.push(totalPages)
+                  } else if (page >= totalPages - 3) {
+                    // Near the end
+                    pages.push(1)
+                    pages.push('...')
+                    for (let i = totalPages - 4; i <= totalPages; i++) {
+                      pages.push(i)
+                    }
+                  } else {
+                    // In the middle
+                    pages.push(1)
+                    pages.push('...')
+                    for (let i = page - 1; i <= page + 1; i++) {
+                      pages.push(i)
+                    }
+                    pages.push('...')
+                    pages.push(totalPages)
+                  }
+                }
+
+                return pages.map((pageNum, index) => (
+                  <div key={index}>
+                    {pageNum === '...' ? (
+                      <span className="px-3 py-2 text-gray-500">...</span>
+                    ) : (
+                      <button
+                        className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                          page === pageNum
+                            ? 'bg-[#635bff] text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        onClick={() => setPage(pageNum as number)}
+                      >
+                        {pageNum}
+                      </button>
+                    )}
+                  </div>
+                ))
+              })()}
+
+              {/* Next Button */}
+              <button
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= Math.ceil(totalCount / pageSize)}
+              >
+                Next
+              </button>
+            </div>
+
+            {/* Mobile Pagination */}
+            <div className="md:hidden">
+              {/* Mobile Previous/Next */}
+              <div className="flex justify-between items-center mb-4">
+                <button
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span className="text-gray-700 font-medium">
+                  Page {page} of {Math.ceil(totalCount / pageSize)}
+                </span>
+                <button
+                  className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page >= Math.ceil(totalCount / pageSize)}
+                >
+                  Next
+                </button>
+              </div>
+
+              {/* Mobile Page Numbers - Compact */}
+              {(() => {
+                const totalPages = Math.ceil(totalCount / pageSize)
+                const pages: (number | string)[] = []
+
+                if (totalPages <= 5) {
+                  // Show all pages if total is small
+                  for (let i = 1; i <= totalPages; i++) {
                     pages.push(i)
                   }
-                  pages.push('...')
-                  pages.push(totalPages)
+                } else {
+                  // Show compact pagination for mobile
+                  if (page <= 3) {
+                    // Near the beginning
+                    for (let i = 1; i <= 3; i++) {
+                      pages.push(i)
+                    }
+                    pages.push('...')
+                    pages.push(totalPages)
+                  } else if (page >= totalPages - 2) {
+                    // Near the end
+                    pages.push(1)
+                    pages.push('...')
+                    for (let i = totalPages - 2; i <= totalPages; i++) {
+                      pages.push(i)
+                    }
+                  } else {
+                    // In the middle
+                    pages.push(1)
+                    pages.push('...')
+                    pages.push(page)
+                    pages.push('...')
+                    pages.push(totalPages)
+                  }
                 }
-              }
 
-              return pages.map((pageNum, index) => (
-                <div key={index}>
-                  {pageNum === '...' ? (
-                    <span className="px-3 py-2 text-gray-500">...</span>
-                  ) : (
-                    <button
-                      className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
-                        page === pageNum
-                          ? 'bg-[#635bff] text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                      onClick={() => setPage(pageNum as number)}
-                    >
-                      {pageNum}
-                    </button>
-                  )}
-                </div>
-              ))
-            })()}
-
-            {/* Next Button */}
-            <button
-              className="px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={page >= Math.ceil(totalCount / pageSize)}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+                return (
+                  <div className="flex justify-center items-center gap-1">
+                    {pages.map((pageNum, index) => (
+                      <div key={index}>
+                        {pageNum === '...' ? (
+                          <span className="px-2 py-1 text-gray-500 text-sm">...</span>
+                        ) : (
+                          <button
+                            className={`px-3 py-1 rounded font-semibold text-sm transition-colors ${
+                              page === pageNum
+                                ? 'bg-[#635bff] text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                            onClick={() => setPage(pageNum as number)}
+                          >
+                            {pageNum}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+            </div>
           </div>
         )}
 
