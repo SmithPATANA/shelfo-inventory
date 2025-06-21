@@ -153,7 +153,7 @@ export default function InventoryPage() {
       const timeout = setTimeout(() => {
         setPage(1) // Reset to first page when searching
         fetchProducts(searchQuery, selectedType)
-      }, 1600) // 1600ms debounce for better UX
+      }, 3000) // 3000ms debounce for better UX
 
       setSearchTimeout(timeout)
 
