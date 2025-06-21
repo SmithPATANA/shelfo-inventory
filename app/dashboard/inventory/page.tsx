@@ -52,6 +52,7 @@ export default function InventoryPage() {
   const [sortBy, setSortBy] = useState('name')
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -78,8 +79,8 @@ export default function InventoryPage() {
         .eq('user_id', user.id as string)
         .gt('quantity', 0)
 
-      // Add search filter if provided
-      if (searchTerm && searchTerm.trim()) {
+      // Add search filter if provided and has minimum length
+      if (searchTerm && searchTerm.trim().length >= 2) {
         const searchLower = searchTerm.toLowerCase().trim()
         query = query.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`)
       }
@@ -134,6 +135,7 @@ export default function InventoryPage() {
       }
     } finally {
       setLoading(false)
+      setSearchLoading(false)
     }
   }, [page, pageSize, sortBy])
 
@@ -143,15 +145,28 @@ export default function InventoryPage() {
       clearTimeout(searchTimeout)
     }
 
-    const timeout = setTimeout(() => {
-      setPage(1) // Reset to first page when searching
-      fetchProducts(searchQuery, selectedType)
-    }, 300) // 300ms debounce
+    // Only search if query has minimum length or is empty (to show all results)
+    const shouldSearch = searchQuery.length === 0 || searchQuery.trim().length >= 2
 
-    setSearchTimeout(timeout)
+    if (shouldSearch) {
+      setSearchLoading(true)
+      const timeout = setTimeout(() => {
+        setPage(1) // Reset to first page when searching
+        fetchProducts(searchQuery, selectedType)
+      }, 800) // 800ms debounce for better UX
 
-    return () => {
-      if (timeout) clearTimeout(timeout)
+      setSearchTimeout(timeout)
+
+      return () => {
+        if (timeout) clearTimeout(timeout)
+      }
+    } else {
+      // If search query is too short, show loading state briefly
+      setSearchLoading(true)
+      const timeout = setTimeout(() => {
+        setSearchLoading(false)
+      }, 300)
+      setSearchTimeout(timeout)
     }
   }, [searchQuery, selectedType, fetchProducts])
 
@@ -241,16 +256,28 @@ export default function InventoryPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search products by name, type, or supplier..."
+                placeholder="Search products (min. 2 characters)..."
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-10 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                {searchLoading ? (
+                  <svg className="animate-spin h-5 w-5 text-[#635bff]" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                )}
               </div>
+              {searchQuery.length > 0 && searchQuery.length < 2 && (
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <span className="text-xs text-gray-400">Type more...</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-2 sm:gap-4">
