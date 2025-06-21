@@ -49,7 +49,7 @@ function EditModal({ product, onClose, onSave }: EditModalProps) {
 export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState('')
-  const [sortBy, setSortBy] = useState('name')
+  const [sortBy, setSortBy] = useState('newest')
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchLoading, setSearchLoading] = useState(false)
@@ -106,8 +106,11 @@ export default function InventoryPage() {
         case 'price':
           query = query.order('selling_price', { ascending: false })
           break
+        case 'newest':
+          query = query.order('created_at', { ascending: false })
+          break
         default:
-          query = query.order('name', { ascending: true })
+          query = query.order('created_at', { ascending: false })
       }
 
       // Add pagination
@@ -314,6 +317,7 @@ export default function InventoryPage() {
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value)}
               className="w-full sm:w-auto rounded-lg border border-gray-300 px-3 py-3 sm:py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm bg-white shadow-sm"
             >
+              <option value="newest">Newest First</option>
               <option value="name">Sort by Name</option>
               <option value="quantity">Sort by Quantity</option>
               <option value="price">Sort by Price</option>
