@@ -58,8 +58,9 @@ export default function InventoryPage() {
   const [page, setPage] = useState(1)
   const pageSize = 8
   const [totalCount, setTotalCount] = useState(0)
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
 
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = useCallback(async (searchTerm?: string, typeFilter?: string) => {
     setLoading(true)
     setError(null)
     try {
@@ -69,23 +70,50 @@ export default function InventoryPage() {
         setLoading(false)
         return
       }
-      // Get total count
-      const { count: total, error: countError } = await supabase
+
+      // Build the query
+      let query = supabase
         .from('products')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .eq('user_id', user.id as string)
         .gt('quantity', 0)
+
+      // Add search filter if provided
+      if (searchTerm && searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase().trim()
+        query = query.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`)
+      }
+
+      // Add type filter if provided
+      if (typeFilter && typeFilter.trim()) {
+        query = query.eq('type', typeFilter)
+      }
+
+      // Get total count with filters
+      const { count: total, error: countError } = await query
       if (countError) throw countError
       setTotalCount(total || 0)
-      // Fetch paginated products
+
+      // Add sorting
+      switch (sortBy) {
+        case 'name':
+          query = query.order('name', { ascending: true })
+          break
+        case 'quantity':
+          query = query.order('quantity', { ascending: false })
+          break
+        case 'price':
+          query = query.order('selling_price', { ascending: false })
+          break
+        default:
+          query = query.order('name', { ascending: true })
+      }
+
+      // Add pagination
       const from = (page - 1) * pageSize
       const to = from + pageSize - 1
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user.id as string)
-        .gt('quantity', 0)
-        .range(from, to)
+      const { data, error } = await query.range(from, to)
+
       if (error) throw error
       setProducts(
         ((data || []) as Array<{ id: string; name: string; type: string; quantity: number; purchase_price: number; selling_price: number; supplier: string }> ).map((p) => ({
@@ -107,32 +135,35 @@ export default function InventoryPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, pageSize])
+  }, [page, pageSize, sortBy])
 
+  // Debounced search effect
   useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.supplier.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesType = !selectedType || product.type === selectedType
-    return matchesSearch && matchesType
-  })
-
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return a.name.localeCompare(b.name)
-      case 'quantity':
-        return b.quantity - a.quantity
-      case 'price':
-        return b.sellingPrice - a.sellingPrice
-      default:
-        return 0
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
     }
-  })
+
+    const timeout = setTimeout(() => {
+      setPage(1) // Reset to first page when searching
+      fetchProducts(searchQuery, selectedType)
+    }, 300) // 300ms debounce
+
+    setSearchTimeout(timeout)
+
+    return () => {
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [searchQuery, selectedType, fetchProducts])
+
+  // Effect for sort changes
+  useEffect(() => {
+    fetchProducts(searchQuery, selectedType)
+  }, [sortBy, fetchProducts])
+
+  // Effect for page changes
+  useEffect(() => {
+    fetchProducts(searchQuery, selectedType)
+  }, [page, fetchProducts])
 
   // Delete handler
   const handleDelete = async (id: string) => {
@@ -140,7 +171,8 @@ export default function InventoryPage() {
     try {
       const { error } = await supabase.from('products').delete().eq('id', id)
       if (error) throw error
-      setProducts(products => products.filter(p => p.id !== id))
+      // Refresh the current page after deletion
+      fetchProducts(searchQuery, selectedType)
     } catch (err: unknown) {
       if (err instanceof Error) {
         alert('Failed to delete: ' + err.message)
@@ -164,7 +196,8 @@ export default function InventoryPage() {
         selling_price: updated.sellingPrice,
       }).eq('id', updated.id)
       if (error) throw error
-      setProducts(products => products.map(p => p.id === updated.id ? updated : p))
+      // Refresh the current page after update
+      fetchProducts(searchQuery, selectedType)
       setEditProduct(null)
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -208,7 +241,7 @@ export default function InventoryPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search products by name, type, or supplier..."
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
@@ -243,9 +276,20 @@ export default function InventoryPage() {
           </div>
         </div>
 
+        {/* Search Results Info */}
+        {(searchQuery || selectedType) && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-800">
+              Showing {totalCount} result{totalCount !== 1 ? 's' : ''} 
+              {searchQuery && ` for "${searchQuery}"`}
+              {selectedType && ` in ${selectedType}`}
+            </p>
+          </div>
+        )}
+
         {/* Products Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
-          {sortedProducts.map((product) => (
+          {products.map((product) => (
             <div
               key={product.id}
               className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-200 p-4 flex flex-col justify-between min-h-[210px] border border-gray-100"
@@ -295,34 +339,43 @@ export default function InventoryPage() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-center items-center gap-4 mt-8">
-          <button
-            className="px-4 py-2 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </button>
-          <span className="text-gray-700 font-medium">
-            Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
-          </span>
-          <button
-            className="px-4 py-2 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= Math.ceil(totalCount / pageSize)}
-          >
-            Next
-          </button>
-        </div>
+        {totalCount > pageSize && (
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button
+              className="px-4 py-2 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </button>
+            <span className="text-gray-700 font-medium">
+              Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+            </span>
+            <button
+              className="px-4 py-2 rounded bg-gray-200 text-gray-700 font-semibold disabled:opacity-50"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+            >
+              Next
+            </button>
+          </div>
+        )}
 
         {/* Empty State */}
-        {sortedProducts.length === 0 && (
+        {products.length === 0 && (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by adding some products to your inventory.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              {searchQuery || selectedType ? 'No products found' : 'No products yet'}
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchQuery || selectedType 
+                ? 'Try adjusting your search criteria or filters.'
+                : 'Get started by adding some products to your inventory.'
+              }
+            </p>
             <div className="mt-6">
               <Link
                 href="/dashboard/add-stock"
@@ -335,7 +388,7 @@ export default function InventoryPage() {
         )}
 
         {/* Add Stock Button */}
-        {sortedProducts.length > 0 && (
+        {products.length > 0 && (
           <div className="fixed bottom-5 right-5 z-50">
             <Link
               href="/dashboard/add-stock"
