@@ -22,7 +22,6 @@ type RawProduct = {
   purchase_price: number
   selling_price: number
   supplier: string
-  [key: string]: any;
 };
 
 interface EditModalProps {
