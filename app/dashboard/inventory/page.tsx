@@ -14,6 +14,17 @@ interface Product {
   supplier: string
 }
 
+type RawProduct = {
+  id: string
+  name: string
+  type: string
+  quantity: number
+  purchase_price: number
+  selling_price: number
+  supplier: string
+  [key: string]: any;
+};
+
 interface EditModalProps {
   product: Product | null
   onClose: () => void
@@ -114,7 +125,7 @@ export default function InventoryPage() {
       if (error) throw error
 
       setProducts(
-        (data || []).map((p: any) => ({
+        (data || []).map((p: RawProduct) => ({
           id: p.id,
           name: p.name,
           type: p.type,
@@ -124,26 +135,17 @@ export default function InventoryPage() {
           supplier: p.supplier,
         }))
       )
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch products.')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to fetch products.')
+      } else {
+        setError('An unknown error occurred.')
+      }
     } finally {
       setLoading(false)
       setSearchLoading(false)
     }
   }, [activeSearch, selectedType, sortBy, page, pageSize])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery) {
-        setPage(1);
-        setActiveSearch(searchQuery);
-      } else {
-        // Clear search if input is empty
-        setActiveSearch('');
-      }
-    }, 500); // Debounce search input
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   useEffect(() => {
     fetchProducts();
