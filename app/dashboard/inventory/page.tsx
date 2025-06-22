@@ -61,87 +61,58 @@ export default function InventoryPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [activeSearch, setActiveSearch] = useState('')
 
-  const fetchProducts = useCallback(async (searchTerm?: string, typeFilter?: string) => {
-    setLoading(true)
-    setError(null)
+  const fetchProducts = useCallback(async () => {
+    setSearchLoading(true);
+    setError(null);
+
     try {
-      const user = await getCurrentUser()
+      const user = await getCurrentUser();
       if (!user) {
-        setError('User not authenticated')
-        setLoading(false)
-        return
+        setError('User not authenticated');
+        return;
       }
 
-      // Check if Supabase is accessible
-      const { data: testData, error: testError } = await supabase
-        .from('products')
-        .select('id')
-        .limit(1)
-      
-      if (testError) {
-        console.error('Supabase connection test failed:', testError)
-        throw new Error('Unable to connect to database. Please check your internet connection.')
-      }
-
-      // Build the query
       let query = supabase
         .from('products')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id as string)
-        .gt('quantity', 0)
+        .gt('quantity', 0);
 
-      // Add search filter if provided - remove minimum length requirement for better UX
-      if (searchTerm && searchTerm.trim()) {
-        const searchLower = searchTerm.toLowerCase().trim()
-        // Use a more reliable search approach with individual filters
-        query = query.or(
-          `name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`
-        )
+      if (activeSearch.trim()) {
+        const searchLower = activeSearch.toLowerCase().trim();
+        query = query.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`);
       }
 
-      // Add type filter if provided
-      if (typeFilter && typeFilter.trim()) {
-        query = query.eq('type', typeFilter)
-      }
-
-      // Get total count with filters
-      const { count: total, error: countError } = await query
-      if (countError) {
-        console.error('Count error:', countError)
-        throw new Error(`Failed to get product count: ${countError.message}`)
-      }
-      setTotalCount(total || 0)
-
-      // Add sorting
-      switch (sortBy) {
-        case 'name':
-          query = query.order('name', { ascending: true })
-          break
-        case 'quantity':
-          query = query.order('quantity', { ascending: false })
-          break
-        case 'price':
-          query = query.order('selling_price', { ascending: false })
-          break
-        case 'newest':
-          query = query.order('created_at', { ascending: false })
-          break
-        default:
-          query = query.order('created_at', { ascending: false })
-      }
-
-      // Add pagination
-      const from = (page - 1) * pageSize
-      const to = from + pageSize - 1
-      const { data, error } = await query.range(from, to)
-
-      if (error) {
-        console.error('Data fetch error:', error)
-        throw new Error(`Failed to fetch products: ${error.message}`)
+      if (selectedType.trim()) {
+        query = query.eq('type', selectedType);
       }
       
+      const { count: total, error: countError } = await query;
+      if (countError) throw countError;
+      setTotalCount(total || 0);
+
+      switch (sortBy) {
+        case 'name':
+          query = query.order('name', { ascending: true });
+          break;
+        case 'quantity':
+          query = query.order('quantity', { ascending: false });
+          break;
+        case 'price':
+          query = query.order('selling_price', { ascending: false });
+          break;
+        default:
+          query = query.order('created_at', { ascending: false });
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error } = await query.range(from, to);
+
+      if (error) throw error;
+      
       setProducts(
-        ((data || []) as Array<{ id: string; name: string; type: string; quantity: number; purchase_price: number; selling_price: number; supplier: string }> ).map((p) => ({
+        (data || []).map((p: any) => ({
           id: p.id,
           name: p.name,
           type: p.type,
@@ -150,123 +121,53 @@ export default function InventoryPage() {
           sellingPrice: p.selling_price,
           supplier: p.supplier,
         }))
-      )
-    } catch (err: unknown) {
-      console.error('Fetch products error:', err)
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError('Failed to fetch products. Please try again.')
-      }
+      );
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch products.');
     } finally {
-      setLoading(false)
-      setSearchLoading(false)
+      setLoading(false);
+      setSearchLoading(false);
     }
-  }, [page, pageSize, sortBy])
+  }, [activeSearch, selectedType, sortBy, page, pageSize]);
 
-  // Handle manual search
-  const handleSearch = async () => {
-    // Don't search if query is empty or only whitespace
-    if (!searchQuery.trim()) {
-      setError('Please enter a search term')
-      return
-    }
-    
-    setSearchLoading(true)
-    setPage(1) // Reset to first page when searching
-    setActiveSearch(searchQuery)
-    
-    // Add retry mechanism for search
-    let retries = 0
-    const maxRetries = 3
-    
-    while (retries < maxRetries) {
-      try {
-        await fetchProducts(searchQuery, selectedType)
-        break // Success, exit retry loop
-      } catch (error) {
-        retries++
-        if (retries >= maxRetries) {
-          console.error(`Search failed after ${maxRetries} attempts:`, error)
-          setError('Search failed. Please check your connection and try again.')
-        } else {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * retries))
-        }
-      }
-    }
-  }
+  useEffect(() => {
+    const debounceTimeout = setTimeout(() => {
+      fetchProducts();
+    }, 300); // Debounce fetch
+    return () => clearTimeout(debounceTimeout);
+  }, [fetchProducts]);
 
-  // Handle clear search
+  useEffect(() => {
+    const debounceInput = setTimeout(() => {
+      setPage(1); // Reset page on new search
+      setActiveSearch(searchQuery);
+    }, 500); // Debounce user input
+    return () => clearTimeout(debounceInput);
+  }, [searchQuery]);
+
+  const handleSearch = () => {
+    setPage(1);
+    setActiveSearch(searchQuery);
+  };
+
   const handleClearSearch = () => {
-    setSearchQuery('')
-    setActiveSearch('')
-    setPage(1)
-    fetchProducts('', selectedType)
-  }
+    setSearchQuery('');
+    setActiveSearch('');
+    setPage(1);
+  };
 
-  // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch()
+      handleSearch();
     }
-  }
+  };
 
-  // Effect for type filter changes
-  useEffect(() => {
-    fetchProducts(activeSearch, selectedType)
-  }, [selectedType, fetchProducts])
-
-  // Effect for sort changes
-  useEffect(() => {
-    fetchProducts(activeSearch, selectedType)
-  }, [sortBy, fetchProducts])
-
-  // Effect for page changes
-  useEffect(() => {
-    fetchProducts(activeSearch, selectedType)
-  }, [page, fetchProducts])
-
-  // Initial load
-  useEffect(() => {
-    fetchProducts('', '')
-  }, [fetchProducts])
-
-  // Debounced search effect
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
-  
-  useEffect(() => {
-    // Clear existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    // Set new timeout for debounced search
-    if (searchQuery.trim()) {
-      searchTimeoutRef.current = setTimeout(() => {
-        setSearchLoading(true)
-        setPage(1) // Reset to first page when searching
-        setActiveSearch(searchQuery)
-        fetchProducts(searchQuery, selectedType)
-      }, 500) // Wait 500ms after user stops typing
-    }
-    
-    // Cleanup timeout on unmount
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [searchQuery, fetchProducts, selectedType]) // Include dependencies
-
-  // Delete handler
   const handleDelete = async (id: string) => {
     setDeletingId(id)
     try {
       const { error } = await supabase.from('products').delete().eq('id', id)
       if (error) throw error
-      // Refresh the current page after deletion
-      fetchProducts(activeSearch, selectedType)
+      fetchProducts()
     } catch (err: unknown) {
       if (err instanceof Error) {
         alert('Failed to delete: ' + err.message)
@@ -278,7 +179,6 @@ export default function InventoryPage() {
     }
   }
 
-  // Edit handler
   const handleSaveEdit = async (updated: Product) => {
     try {
       const { error } = await supabase.from('products').update({
@@ -290,8 +190,7 @@ export default function InventoryPage() {
         selling_price: updated.sellingPrice,
       }).eq('id', updated.id)
       if (error) throw error
-      // Refresh the current page after update
-      fetchProducts(activeSearch, selectedType)
+      fetchProducts()
       setEditProduct(null)
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -302,12 +201,12 @@ export default function InventoryPage() {
     }
   }
 
-  if (loading) {
+  if (loading && page === 1 && products.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <span className="text-lg text-gray-600">Loading inventory...</span>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -348,7 +247,7 @@ export default function InventoryPage() {
                   disabled={searchLoading}
                   className="px-4 py-3 sm:py-2 bg-[#635bff] text-white rounded-r-lg hover:bg-[#4f46e5] focus:outline-none focus:ring-1 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {searchLoading ? (
+                  {searchLoading && !loading ? (
                     <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -664,7 +563,7 @@ export default function InventoryPage() {
         )}
 
         {/* Add Stock Button */}
-        {products.length > 0 && (
+        {products.length > 0 && !loading && (
           <div className="fixed bottom-5 right-5 z-50">
             <Link
               href="/dashboard/add-stock"
@@ -685,5 +584,5 @@ export default function InventoryPage() {
         />
       )}
     </div>
-  )
+  );
 } 
