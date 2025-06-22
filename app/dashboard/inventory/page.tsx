@@ -62,55 +62,57 @@ export default function InventoryPage() {
   const [activeSearch, setActiveSearch] = useState('')
 
   const fetchProducts = useCallback(async () => {
-    setSearchLoading(true);
-    setError(null);
+    setSearchLoading(true)
+    setError(null)
 
     try {
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
       if (!user) {
-        setError('User not authenticated');
-        return;
+        setError('User not authenticated')
+        return
       }
 
       let query = supabase
         .from('products')
         .select('*', { count: 'exact' })
         .eq('user_id', user.id as string)
-        .gt('quantity', 0);
+        .gt('quantity', 0)
 
       if (activeSearch.trim()) {
-        const searchLower = activeSearch.toLowerCase().trim();
-        query = query.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`);
+        const searchLower = activeSearch.toLowerCase().trim()
+        query = query.or(
+          `name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`
+        )
       }
 
       if (selectedType.trim()) {
-        query = query.eq('type', selectedType);
+        query = query.eq('type', selectedType)
       }
-      
-      const { count: total, error: countError } = await query;
-      if (countError) throw countError;
-      setTotalCount(total || 0);
+
+      const { count: total, error: countError } = await query
+      if (countError) throw countError
+      setTotalCount(total || 0)
 
       switch (sortBy) {
         case 'name':
-          query = query.order('name', { ascending: true });
-          break;
+          query = query.order('name', { ascending: true })
+          break
         case 'quantity':
-          query = query.order('quantity', { ascending: false });
-          break;
+          query = query.order('quantity', { ascending: false })
+          break
         case 'price':
-          query = query.order('selling_price', { ascending: false });
-          break;
+          query = query.order('selling_price', { ascending: false })
+          break
         default:
-          query = query.order('created_at', { ascending: false });
+          query = query.order('created_at', { ascending: false })
       }
 
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      const { data, error } = await query.range(from, to);
+      const from = (page - 1) * pageSize
+      const to = from + pageSize - 1
+      const { data, error } = await query.range(from, to)
 
-      if (error) throw error;
-      
+      if (error) throw error
+
       setProducts(
         (data || []).map((p: any) => ({
           id: p.id,
@@ -121,40 +123,42 @@ export default function InventoryPage() {
           sellingPrice: p.selling_price,
           supplier: p.supplier,
         }))
-      );
+      )
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch products.');
+      setError(err.message || 'Failed to fetch products.')
     } finally {
-      setLoading(false);
-      setSearchLoading(false);
+      setLoading(false)
+      setSearchLoading(false)
     }
-  }, [activeSearch, selectedType, sortBy, page, pageSize]);
+  }, [activeSearch, selectedType, sortBy, page, pageSize])
 
   useEffect(() => {
-    const debounceTimeout = setTimeout(() => {
-      fetchProducts();
-    }, 300); // Debounce fetch
-    return () => clearTimeout(debounceTimeout);
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    const debounceInput = setTimeout(() => {
-      setPage(1); // Reset page on new search
-      setActiveSearch(searchQuery);
-    }, 500); // Debounce user input
-    return () => clearTimeout(debounceInput);
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        setPage(1);
+        setActiveSearch(searchQuery);
+      } else {
+        // Clear search if input is empty
+        setActiveSearch('');
+      }
+    }, 500); // Debounce search input
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   const handleSearch = () => {
-    setPage(1);
-    setActiveSearch(searchQuery);
-  };
+    setPage(1)
+    setActiveSearch(searchQuery)
+  }
 
   const handleClearSearch = () => {
-    setSearchQuery('');
-    setActiveSearch('');
-    setPage(1);
-  };
+    setSearchQuery('')
+    setActiveSearch('')
+    setPage(1)
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -238,7 +242,7 @@ export default function InventoryPage() {
                   type="text"
                   placeholder="Search products by name, type, or supplier..."
                   value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
                   className="flex-1 rounded-l-lg border border-gray-300 pl-4 pr-4 py-3 sm:py-2 focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] text-sm sm:text-base bg-white shadow-sm text-gray-900"
                 />
@@ -302,7 +306,7 @@ export default function InventoryPage() {
         {(activeSearch || selectedType) && (
           <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
-              Showing {totalCount} result{totalCount !== 1 ? 's' : ''} 
+              Showing {totalCount} result{totalCount !== 1 ? 's' : ''}
               {activeSearch && ` for "${activeSearch}"`}
               {selectedType && ` in ${selectedType}`}
             </p>
@@ -546,10 +550,9 @@ export default function InventoryPage() {
               {activeSearch || selectedType ? 'No products found' : 'No products yet'}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {activeSearch || selectedType 
+              {activeSearch || selectedType
                 ? 'Try adjusting your search criteria or filters.'
-                : 'Get started by adding some products to your inventory.'
-              }
+                : 'Get started by adding some products to your inventory.'}
             </p>
             <div className="mt-6">
               <Link
