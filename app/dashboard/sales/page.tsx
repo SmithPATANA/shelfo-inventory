@@ -80,7 +80,8 @@ export default function SalesPage() {
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.type.toLowerCase().includes(searchQuery.toLowerCase())
+    product.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.supplier.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -199,7 +200,7 @@ export default function SalesPage() {
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search products by name or type..."
+                    placeholder="Search products by name, type, or supplier..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 pl-12 pr-4 py-3 focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff] focus:ring-opacity-20 transition-all duration-200 text-sm sm:text-base"
@@ -222,9 +223,14 @@ export default function SalesPage() {
                         : 'border-gray-200 hover:border-[#635bff] hover:bg-gray-50'
                     }`}
                   >
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-medium text-gray-900">{product.name}</h3>
                       <p className="text-sm text-gray-500 mt-0.5">{product.type}</p>
+                      {product.supplier && (
+                        <p className="text-xs text-blue-600 mt-1 font-medium">
+                          Supplier: {product.supplier}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 min-w-[120px] w-full sm:w-auto mt-2 sm:mt-0">
                       <span className="font-semibold text-gray-900">KES {product.selling_price.toLocaleString()}</span>
@@ -263,6 +269,31 @@ export default function SalesPage() {
                 </div>
                 
                 <div className="space-y-6">
+                  {/* Product Information */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">{selectedProduct.name}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-500">Type:</span>
+                        <span className="ml-2 font-medium text-gray-900">{selectedProduct.type}</span>
+                      </div>
+                      {selectedProduct.supplier && (
+                        <div>
+                          <span className="text-gray-500">Supplier:</span>
+                          <span className="ml-2 font-medium text-blue-600">{selectedProduct.supplier}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-gray-500">Unit Price:</span>
+                        <span className="ml-2 font-medium text-gray-900">KES {selectedProduct.selling_price.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Available Stock:</span>
+                        <span className="ml-2 font-medium text-gray-900">{selectedProduct.quantity} units</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Quantity Input */}
                   <div>
                     <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">

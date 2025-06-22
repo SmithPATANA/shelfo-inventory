@@ -15,6 +15,7 @@ interface SaleRecord {
     name: string
     type: string
     selling_price: number
+    supplier: string
   }
 }
 
@@ -58,7 +59,8 @@ export default function SalesRecordsPage() {
             id,
             name,
             type,
-            selling_price
+            selling_price,
+            supplier
           )
         `)
         .eq('user_id', user.id)
@@ -114,6 +116,7 @@ export default function SalesRecordsPage() {
   const filteredRecords = salesRecords.filter(record =>
     record.product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     record.product.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    record.product.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
     record.notes?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -195,7 +198,7 @@ export default function SalesRecordsPage() {
           <div className="relative flex-grow">
             <input
               type="text"
-              placeholder="Search by product or notes..."
+              placeholder="Search by product, type, supplier, or notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -242,6 +245,7 @@ export default function SalesRecordsPage() {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
@@ -261,6 +265,9 @@ export default function SalesRecordsPage() {
                             <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                               {record.product.type}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-blue-600 font-medium">{record.product.supplier}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-800">{record.quantity}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">KES {record.total_amount.toLocaleString()}</td>
@@ -285,6 +292,7 @@ export default function SalesRecordsPage() {
                             <span className="inline-flex mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                               {record.product.type}
                             </span>
+                            <p className="text-xs text-blue-600 font-medium mt-1">Supplier: {record.product.supplier}</p>
                           </div>
                           <p className="text-sm font-bold text-green-600">KES {record.total_amount.toLocaleString()}</p>
                         </div>
