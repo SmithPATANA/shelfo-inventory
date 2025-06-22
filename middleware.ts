@@ -1,11 +1,10 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  let res = NextResponse.next({
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
     request: {
-      headers: req.headers,
+      headers: request.headers,
     },
   })
 
@@ -15,37 +14,39 @@ export async function middleware(req: NextRequest) {
     {
       cookies: {
         get(name: string) {
-          return req.cookies.get(name)?.value
+          return request.cookies.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
-          req.cookies.set({
+        set(name: string, value: string, options: CookieOptions) {
+          // If the cookie is set, update the request cookies as well.
+          request.cookies.set({
             name,
             value,
             ...options,
           })
-          res = NextResponse.next({
+          response = NextResponse.next({
             request: {
-              headers: req.headers,
+              headers: request.headers,
             },
           })
-          res.cookies.set({
+          response.cookies.set({
             name,
             value,
             ...options,
           })
         },
-        remove(name: string, options: any) {
-          req.cookies.set({
+        remove(name: string, options: CookieOptions) {
+          // If the cookie is removed, update the request cookies as well.
+          request.cookies.set({
             name,
             value: '',
             ...options,
           })
-          res = NextResponse.next({
+          response = NextResponse.next({
             request: {
-              headers: req.headers,
+              headers: request.headers,
             },
           })
-          res.cookies.set({
+          response.cookies.set({
             name,
             value: '',
             ...options,
@@ -55,10 +56,10 @@ export async function middleware(req: NextRequest) {
     }
   )
 
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getSession()
+  // Refreshing the session before loading Server Component routes
+  await supabase.auth.getUser()
 
-  return res
+  return response
 }
 
 // Specify which routes should be protected
@@ -69,9 +70,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
-     * - auth routes (login, signup, etc.)
+     * - api (API routes)
+     * - auth (auth routes)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|login|signup).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|auth).*)',
   ],
 } 
