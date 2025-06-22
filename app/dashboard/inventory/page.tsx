@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { supabase, getCurrentUser } from '@/lib/supabase'
 
@@ -72,6 +72,17 @@ export default function InventoryPage() {
         return
       }
 
+      // Check if Supabase is accessible
+      const { data: testData, error: testError } = await supabase
+        .from('products')
+        .select('id')
+        .limit(1)
+      
+      if (testError) {
+        console.error('Supabase connection test failed:', testError)
+        throw new Error('Unable to connect to database. Please check your internet connection.')
+      }
+
       // Build the query
       let query = supabase
         .from('products')
@@ -79,10 +90,13 @@ export default function InventoryPage() {
         .eq('user_id', user.id as string)
         .gt('quantity', 0)
 
-      // Add search filter if provided and has minimum length
-      if (searchTerm && searchTerm.trim().length >= 2) {
+      // Add search filter if provided - remove minimum length requirement for better UX
+      if (searchTerm && searchTerm.trim()) {
         const searchLower = searchTerm.toLowerCase().trim()
-        query = query.or(`name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`)
+        // Use a more reliable search approach with individual filters
+        query = query.or(
+          `name.ilike.%${searchLower}%,type.ilike.%${searchLower}%,supplier.ilike.%${searchLower}%`
+        )
       }
 
       // Add type filter if provided
@@ -92,7 +106,10 @@ export default function InventoryPage() {
 
       // Get total count with filters
       const { count: total, error: countError } = await query
-      if (countError) throw countError
+      if (countError) {
+        console.error('Count error:', countError)
+        throw new Error(`Failed to get product count: ${countError.message}`)
+      }
       setTotalCount(total || 0)
 
       // Add sorting
@@ -118,7 +135,11 @@ export default function InventoryPage() {
       const to = from + pageSize - 1
       const { data, error } = await query.range(from, to)
 
-      if (error) throw error
+      if (error) {
+        console.error('Data fetch error:', error)
+        throw new Error(`Failed to fetch products: ${error.message}`)
+      }
+      
       setProducts(
         ((data || []) as Array<{ id: string; name: string; type: string; quantity: number; purchase_price: number; selling_price: number; supplier: string }> ).map((p) => ({
           id: p.id,
@@ -131,10 +152,11 @@ export default function InventoryPage() {
         }))
       )
     } catch (err: unknown) {
+      console.error('Fetch products error:', err)
       if (err instanceof Error) {
         setError(err.message)
       } else {
-        setError('Failed to fetch products')
+        setError('Failed to fetch products. Please try again.')
       }
     } finally {
       setLoading(false)
@@ -143,11 +165,36 @@ export default function InventoryPage() {
   }, [page, pageSize, sortBy])
 
   // Handle manual search
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    // Don't search if query is empty or only whitespace
+    if (!searchQuery.trim()) {
+      setError('Please enter a search term')
+      return
+    }
+    
     setSearchLoading(true)
     setPage(1) // Reset to first page when searching
     setActiveSearch(searchQuery)
-    fetchProducts(searchQuery, selectedType)
+    
+    // Add retry mechanism for search
+    let retries = 0
+    const maxRetries = 3
+    
+    while (retries < maxRetries) {
+      try {
+        await fetchProducts(searchQuery, selectedType)
+        break // Success, exit retry loop
+      } catch (error) {
+        retries++
+        if (retries >= maxRetries) {
+          console.error(`Search failed after ${maxRetries} attempts:`, error)
+          setError('Search failed. Please check your connection and try again.')
+        } else {
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * retries))
+        }
+      }
+    }
   }
 
   // Handle clear search
@@ -182,8 +229,35 @@ export default function InventoryPage() {
 
   // Initial load
   useEffect(() => {
-    fetchProducts()
+    fetchProducts('', '')
   }, [fetchProducts])
+
+  // Debounced search effect
+  const searchTimeoutRef = useRef<NodeJS.Timeout>()
+  
+  useEffect(() => {
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+    
+    // Set new timeout for debounced search
+    if (searchQuery.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        setSearchLoading(true)
+        setPage(1) // Reset to first page when searching
+        setActiveSearch(searchQuery)
+        fetchProducts(searchQuery, selectedType)
+      }, 500) // Wait 500ms after user stops typing
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchQuery, fetchProducts, selectedType]) // Include dependencies
 
   // Delete handler
   const handleDelete = async (id: string) => {
