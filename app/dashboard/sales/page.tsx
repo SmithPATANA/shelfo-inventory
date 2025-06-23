@@ -35,6 +35,7 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
@@ -50,6 +51,7 @@ export default function SalesPage() {
         .from('products')
         .select('*')
         .eq('user_id', user.id)
+        .gt('quantity', 0)
       if (error) throw error
       const validProducts = (data || []).filter((p): p is Product =>
         p && typeof p.id === 'string' && typeof p.name === 'string' && typeof p.type === 'string' && typeof p.quantity === 'number' && typeof p.selling_price === 'number' && typeof p.purchase_price === 'number' && typeof p.supplier === 'string'
@@ -92,26 +94,84 @@ export default function SalesPage() {
       ...prev,
       [name]: name === 'quantity' || name === 'discount' ? parseFloat(value) || 0 : value
     }))
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }))
+    }
+  }
+
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {}
+    
+    if (!formData.productId) {
+      errors.productId = 'Please select a product'
+    }
+    
+    if (formData.quantity < 1) {
+      errors.quantity = 'Quantity must be at least 1'
+    }
+    
+    const selectedProduct = products.find(p => p.id === formData.productId)
+    if (selectedProduct && formData.quantity > selectedProduct.quantity) {
+      errors.quantity = `Only ${selectedProduct.quantity} units available in stock`
+    }
+    
+    if (formData.discount < 0) {
+      errors.discount = 'Discount cannot be negative'
+    }
+    
+    if (selectedProduct && formData.discount > selectedProduct.selling_price * formData.quantity) {
+      errors.discount = `Discount cannot exceed total sale amount (KES ${(selectedProduct.selling_price * formData.quantity).toLocaleString()})`
+    }
+    
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    
+    // Clear previous errors
     setError(null)
     setSuccess(null)
+    setFormErrors({})
+    
+    // Validate form first
+    if (!validateForm()) {
+      return
+    }
+    
+    setIsSubmitting(true)
 
     try {
       const user = await getCurrentUser()
       if (!user) throw new Error('User not authenticated')
+      
       const selectedProduct = products.find((p) => p.id === formData.productId)
       if (!selectedProduct) throw new Error('No product selected')
+      
       if (formData.quantity < 1 || formData.quantity > selectedProduct.quantity) {
-        throw new Error('Invalid quantity')
+        throw new Error(`Invalid quantity. Available: ${selectedProduct.quantity}, Requested: ${formData.quantity}`)
       }
+      
       const totalAmount = selectedProduct.selling_price * formData.quantity - formData.discount
+      
+      // Validate discount doesn't exceed total
+      if (formData.discount > selectedProduct.selling_price * formData.quantity) {
+        throw new Error(`Discount cannot exceed total sale amount. Max discount: KES ${(selectedProduct.selling_price * formData.quantity).toLocaleString()}`)
+      }
+
+      console.log('Recording sale with data:', {
+        user_id: user.id,
+        product_id: selectedProduct.id,
+        quantity: formData.quantity,
+        total_amount: totalAmount,
+        notes: formData.notes || null,
+        discount: formData.discount,
+      })
 
       // 1. Insert sale
-      const { error: saleError } = await supabase.from('sales').insert([
+      const { data: saleData, error: saleError } = await supabase.from('sales').insert([
         {
           user_id: user.id,
           product_id: selectedProduct.id,
@@ -121,23 +181,40 @@ export default function SalesPage() {
           discount: formData.discount,
         } as import('@/types/supabase').Database['public']['Tables']['sales']['Insert'],
       ])
-      if (saleError) throw saleError
+      
+      if (saleError) {
+        console.error('Sale insert error:', saleError)
+        throw new Error(`Failed to record sale: ${saleError.message || saleError.details || 'Unknown database error'}`)
+      }
+
+      console.log('Sale recorded successfully:', saleData)
 
       // 2. Update product quantity
-      const { error: updateError } = await supabase.from('products')
+      const { data: updateData, error: updateError } = await supabase.from('products')
         .update({ quantity: selectedProduct.quantity - formData.quantity } as import('@/types/supabase').Database['public']['Tables']['products']['Update'])
         .eq('id', selectedProduct.id)
-      if (updateError) throw updateError
+        .select()
+      
+      if (updateError) {
+        console.error('Product update error:', updateError)
+        throw new Error(`Failed to update inventory: ${updateError.message || updateError.details || 'Unknown database error'}`)
+      }
+
+      console.log('Inventory updated successfully:', updateData)
 
       setSuccess('Sale recorded and inventory updated!')
       setTimeout(() => {
         router.push('/dashboard/inventory')
       }, 1200)
     } catch (err) {
+      console.error('Sale recording error:', err)
+      
       if (err instanceof Error) {
-        setError(err.message || 'Failed to record sale')
+        setError(err.message)
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        setError(String(err.message))
       } else {
-        setError('Failed to record sale')
+        setError(`Failed to record sale: ${String(err)}`)
       }
     } finally {
       setIsSubmitting(false)
@@ -155,8 +232,30 @@ export default function SalesPage() {
   }
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <span className="text-lg text-red-600">{error}</span>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-6 text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Sale Recording Failed</h3>
+          <p className="text-sm text-red-600 mb-4 break-words">{error}</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => setError(null)}
+              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => router.push('/dashboard/inventory')}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Back to Inventory
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -189,6 +288,29 @@ export default function SalesPage() {
 
       <div className="max-w-3xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Form Validation Errors */}
+          {Object.keys(formErrors).length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc pl-5 space-y-1">
+                      {Object.values(formErrors).map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Product Selection */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="p-4 sm:p-8">
@@ -312,15 +434,26 @@ export default function SalesPage() {
                         max={selectedProduct.quantity}
                         value={formData.quantity}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-200 pl-4 pr-16 py-3 focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff] focus:ring-opacity-20 transition-all duration-200"
+                        className={`w-full rounded-xl border pl-4 pr-16 py-3 focus:ring-2 focus:ring-opacity-20 transition-all duration-200 ${
+                          formErrors.quantity 
+                            ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                            : 'border-gray-200 focus:border-[#635bff] focus:ring-[#635bff]'
+                        }`}
+                        disabled={selectedProduct.quantity === 0}
                       />
                       <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                         <span className="text-gray-500 text-sm font-medium">units</span>
                       </div>
                     </div>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Available: {selectedProduct.quantity} units
-                    </p>
+                    {selectedProduct.quantity === 0 ? (
+                      <p className="mt-2 text-sm text-red-600 font-semibold">Out of stock</p>
+                    ) : formErrors.quantity ? (
+                      <p className="mt-2 text-sm text-red-600">{formErrors.quantity}</p>
+                    ) : (
+                      <p className="mt-2 text-sm text-gray-500">
+                        Available: {selectedProduct.quantity} units
+                      </p>
+                    )}
                   </div>
 
                   {/* Discount Input */}
@@ -337,12 +470,19 @@ export default function SalesPage() {
                         max={selectedProduct.selling_price * formData.quantity}
                         value={formData.discount}
                         onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-200 pl-4 pr-16 py-3 focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff] focus:ring-opacity-20 transition-all duration-200"
+                        className={`w-full rounded-xl border pl-4 pr-16 py-3 focus:ring-2 focus:ring-opacity-20 transition-all duration-200 ${
+                          formErrors.discount 
+                            ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                            : 'border-gray-200 focus:border-[#635bff] focus:ring-[#635bff]'
+                        }`}
                       />
                       <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                         <span className="text-gray-500 text-sm font-medium">KES</span>
                       </div>
                     </div>
+                    {formErrors.discount && (
+                      <p className="mt-2 text-sm text-red-600">{formErrors.discount}</p>
+                    )}
                   </div>
 
                   {/* Notes Input */}
@@ -379,7 +519,7 @@ export default function SalesPage() {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!formData.productId || isSubmitting}
+              disabled={!formData.productId || isSubmitting || selectedProduct && selectedProduct.quantity === 0}
               className="px-8 py-3 bg-gradient-to-r from-[#635bff] to-[#4f46e5] text-white rounded-xl hover:from-[#4f46e5] hover:to-[#4338ca] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               {isSubmitting ? (
