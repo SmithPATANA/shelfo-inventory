@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { supabase, getCurrentUser } from '@/lib/supabase'
+import { supabase, getCurrentUser, getCurrentUserProfile } from '@/lib/supabase'
 
 export default function DashboardPage() {
   const [totalProducts, setTotalProducts] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [totalSales, setTotalSales] = useState<number | null>(null)
+  const [shopName, setShopName] = useState<string | null>(null)
 
   const features = [
     {
@@ -117,12 +118,23 @@ export default function DashboardPage() {
     fetchTotalSales()
   }, [])
 
+  useEffect(() => {
+    const fetchShopName = async () => {
+      const profile = await getCurrentUserProfile();
+      setShopName(profile?.shop_name || null);
+    };
+    fetchShopName();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header with gradient background */}
       <div className="bg-gradient-to-r from-[#635bff] to-[#4f46e5] px-4 py-6 sm:px-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Welcome to ShelfO</h1>
+          {shopName && (
+            <p className="mt-1 text-lg font-semibold text-white drop-shadow-sm">{shopName}</p>
+          )}
           <p className="mt-2 text-sm sm:text-base text-blue-100">Your inventory management system</p>
         </div>
       </div>

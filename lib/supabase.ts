@@ -72,6 +72,24 @@ export const getCurrentUser = async () => {
   }
 }
 
+// Helper function to get current user's profile (including shop_name)
+export const getCurrentUserProfile = async () => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Get user profile error:', error);
+    return null;
+  }
+}
+
 // Debug function to check session status
 export const debugSession = async () => {
   try {
