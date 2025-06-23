@@ -18,6 +18,7 @@ interface SaleForm {
   productId: string
   quantity: number
   notes: string
+  discount: number
 }
 
 export default function SalesPage() {
@@ -27,7 +28,8 @@ export default function SalesPage() {
   const [formData, setFormData] = useState<SaleForm>({
     productId: '',
     quantity: 1,
-    notes: ''
+    notes: '',
+    discount: 0
   })
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,7 +90,7 @@ export default function SalesPage() {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'quantity' ? parseInt(value) || 0 : value
+      [name]: name === 'quantity' || name === 'discount' ? parseFloat(value) || 0 : value
     }))
   }
 
@@ -106,7 +108,7 @@ export default function SalesPage() {
       if (formData.quantity < 1 || formData.quantity > selectedProduct.quantity) {
         throw new Error('Invalid quantity')
       }
-      const totalAmount = selectedProduct.selling_price * formData.quantity
+      const totalAmount = selectedProduct.selling_price * formData.quantity - formData.discount
 
       // 1. Insert sale
       const { error: saleError } = await supabase.from('sales').insert([
@@ -116,6 +118,7 @@ export default function SalesPage() {
           quantity: formData.quantity,
           total_amount: totalAmount,
           notes: formData.notes || null,
+          discount: formData.discount,
         } as import('@/types/supabase').Database['public']['Tables']['sales']['Insert'],
       ])
       if (saleError) throw saleError
@@ -244,7 +247,8 @@ export default function SalesPage() {
                           setFormData({
                             productId: product.id,
                             quantity: Number(e.target.value),
-                            notes: formData.notes
+                            notes: formData.notes,
+                            discount: formData.discount
                           })
                         }}
                         placeholder="Qty"
@@ -319,6 +323,28 @@ export default function SalesPage() {
                     </p>
                   </div>
 
+                  {/* Discount Input */}
+                  <div>
+                    <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-2">
+                      Discount Amount (KES)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        id="discount"
+                        name="discount"
+                        min="0"
+                        max={selectedProduct.selling_price * formData.quantity}
+                        value={formData.discount}
+                        onChange={handleChange}
+                        className="w-full rounded-xl border border-gray-200 pl-4 pr-16 py-3 focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff] focus:ring-opacity-20 transition-all duration-200"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                        <span className="text-gray-500 text-sm font-medium">KES</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Notes Input */}
                   <div>
                     <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
@@ -340,7 +366,7 @@ export default function SalesPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-base font-medium text-gray-700">Total Amount</span>
                       <span className="text-2xl font-bold text-gray-900">
-                        KES {(selectedProduct.selling_price * formData.quantity).toLocaleString()}
+                        KES {(selectedProduct.selling_price * formData.quantity - formData.discount).toLocaleString()}
                       </span>
                     </div>
                   </div>

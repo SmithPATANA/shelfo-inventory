@@ -10,6 +10,7 @@ interface SaleRecord {
   quantity: number
   total_amount: number
   notes: string | null
+  discount: number
   product: {
     id: string
     name: string
@@ -25,6 +26,7 @@ type RawSaleRecord = {
   quantity?: unknown;
   total_amount?: unknown;
   notes?: unknown;
+  discount?: unknown;
   product?: unknown;
   [key: string]: unknown;
 };
@@ -55,6 +57,7 @@ export default function SalesRecordsPage() {
           quantity,
           total_amount,
           notes,
+          discount,
           product:products(
             id,
             name,
@@ -247,6 +250,7 @@ export default function SalesRecordsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                     </tr>
@@ -270,8 +274,9 @@ export default function SalesRecordsPage() {
                             <div className="text-sm text-blue-600 font-medium">{record.product.supplier}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-800">{record.quantity}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">- KES {record.discount.toLocaleString()}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">KES {record.total_amount.toLocaleString()}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">{record.notes || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate" title={record.notes ?? ''}>{record.notes}</td>
                         </tr>
                       )
                     })}
