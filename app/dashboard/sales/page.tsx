@@ -348,17 +348,17 @@ export default function SalesPage() {
                         : 'border-gray-200 hover:border-[#635bff] hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{product.name}</h3>
-                      <p className="text-sm text-gray-500 mt-0.5">{product.type}</p>
+                    <div className="flex-1 w-full">
+                      <h3 className="font-medium text-gray-900 text-base sm:text-lg">{product.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{product.type}</p>
                       {product.supplier && (
                         <p className="text-xs text-blue-600 mt-1 font-medium">
                           Supplier: {product.supplier}
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 min-w-[120px] w-full sm:w-auto mt-2 sm:mt-0">
-                      <span className="font-semibold text-gray-900">KES {product.selling_price.toLocaleString()}</span>
+                    <div className="flex flex-col sm:flex-col items-start sm:items-end gap-2 min-w-[120px] w-full sm:w-auto mt-2 sm:mt-0">
+                      <span className="font-semibold text-gray-900 text-base sm:text-lg">KES {product.selling_price.toLocaleString()}</span>
                       <span className="text-xs text-gray-500">{product.quantity} in stock</span>
                       <input
                         type="number"
@@ -374,7 +374,7 @@ export default function SalesPage() {
                           })
                         }}
                         placeholder="Qty"
-                        className="w-full sm:w-16 rounded border border-gray-300 px-2 py-1 text-sm focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff]"
+                        className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-[#635bff] focus:ring-1 focus:ring-[#635bff] sm:w-16"
                       />
                     </div>
                   </div>
@@ -386,19 +386,18 @@ export default function SalesPage() {
           {/* Sale Details */}
           {selectedProduct && (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="p-6 sm:p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Sale Details</h2>
+              <div className="p-4 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-6 gap-2 sm:gap-0">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Sale Details</h2>
                   <span className="px-3 py-1 text-sm font-medium text-green-600 bg-green-50 rounded-full">
                     Product Selected
                   </span>
                 </div>
-                
                 <div className="space-y-6">
                   {/* Product Information */}
                   <div className="bg-gray-50 rounded-xl p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">{selectedProduct.name}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">{selectedProduct.name}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
                       <div>
                         <span className="text-gray-500">Type:</span>
                         <span className="ml-2 font-medium text-gray-900">{selectedProduct.type}</span>
@@ -420,7 +419,7 @@ export default function SalesPage() {
                     </div>
                   </div>
 
-                  {/* Quantity Input */}
+                  {/* Quantity, Discount, Notes Inputs: full-width on mobile */}
                   <div>
                     <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
                       Quantity Sold
@@ -455,8 +454,6 @@ export default function SalesPage() {
                       </p>
                     )}
                   </div>
-
-                  {/* Discount Input */}
                   <div>
                     <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-2">
                       Discount Amount (KES)
@@ -484,8 +481,6 @@ export default function SalesPage() {
                       <p className="mt-2 text-sm text-red-600">{formErrors.discount}</p>
                     )}
                   </div>
-
-                  {/* Notes Input */}
                   <div>
                     <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
                       Sale Notes (Optional)
@@ -500,10 +495,9 @@ export default function SalesPage() {
                       className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:border-[#635bff] focus:ring-2 focus:ring-[#635bff] focus:ring-opacity-20 transition-all duration-200"
                     />
                   </div>
-
                   {/* Total Amount */}
                   <div className="pt-6 border-t border-gray-100">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <span className="text-base font-medium text-gray-700">Total Amount</span>
                       <span className="text-2xl font-bold text-gray-900">
                         KES {(selectedProduct.selling_price * formData.quantity - formData.discount).toLocaleString()}
@@ -520,10 +514,10 @@ export default function SalesPage() {
             <button
               type="submit"
               disabled={!formData.productId || isSubmitting || selectedProduct && selectedProduct.quantity === 0}
-              className="px-8 py-3 bg-gradient-to-r from-[#635bff] to-[#4f46e5] text-white rounded-xl hover:from-[#4f46e5] hover:to-[#4338ca] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#635bff] to-[#4f46e5] text-white rounded-xl hover:from-[#4f46e5] hover:to-[#4338ca] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#635bff] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               {isSubmitting ? (
-                <div className="flex items-center">
+                <div className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
