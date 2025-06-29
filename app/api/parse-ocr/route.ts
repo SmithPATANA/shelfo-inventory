@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       temperature: 0.2,
       max_tokens: 512,
     });
-    let responseText = completion.choices[0].message?.content || '';
+    const responseText = completion.choices[0].message?.content || '';
     let jsonString = responseText;
     // Remove code block markers if present
     const codeBlockMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       const parsed = JSON.parse(jsonString);
       products = Array.isArray(parsed) ? parsed : [parsed];
     } catch (err) {
+      console.error('JSON parse error:', err);
       // fallback: try to extract array/object from within the string
     }
     return NextResponse.json({ products });

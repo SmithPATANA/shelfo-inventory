@@ -47,6 +47,7 @@ export default function OcrUpload() {
       const text = await extractTextFromImage(selectedFile);
       setExtractedText(text);
     } catch (err) {
+      console.error('Error extracting text:', err);
       setError('Failed to extract text. Please try again.');
     } finally {
       setLoading(false);
@@ -74,6 +75,7 @@ export default function OcrUpload() {
       const data = await response.json();
       setParsedItems(data.items || []);
     } catch (err) {
+      console.error('Error parsing text:', err);
       setError('Failed to parse text. Please try again.');
     } finally {
       setParsing(false);
@@ -97,6 +99,7 @@ export default function OcrUpload() {
         fileInputRef.current.value = '';
       }
     } catch (err) {
+      console.error('Error inserting to inventory:', err);
       setError('Failed to insert items into inventory. Please try again.');
     } finally {
       setInserting(false);

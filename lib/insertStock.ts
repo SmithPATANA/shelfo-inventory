@@ -1,6 +1,15 @@
 import { supabase, getCurrentUser } from '@/lib/supabase';
 
-export async function insertToSupabase(stockItems: any[]) {
+interface StockItem {
+  product: string;
+  quantity: number;
+  unit_price: number;
+  type?: string;
+  supplier?: string;
+  notes?: string | null;
+}
+
+export async function insertToSupabase(stockItems: StockItem[]) {
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
 

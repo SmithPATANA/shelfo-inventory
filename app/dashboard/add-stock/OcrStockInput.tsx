@@ -12,6 +12,8 @@ interface StockItem {
   notes: string | null;
   weight: string | null;
   size: string | null;
+  product: string;
+  unit_price: number;
 }
 
 export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void }) {
@@ -66,6 +68,7 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
       const data = await response.json();
       setExtractedText(data.text || '');
     } catch (err) {
+      console.error('Error extracting text:', err);
       setError('Failed to extract text. Please try again.');
     } finally {
       setLoading(false);
@@ -89,6 +92,7 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
       const data = await response.json();
       setParsedItems(data.products || []);
     } catch (err) {
+      console.error('Error parsing text:', err);
       setError('Failed to parse text. Please try again.');
     } finally {
       setParsing(false);
@@ -117,6 +121,8 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
         weight: item.weight || null,
         size: item.size || null,
         user_id: userId,
+        product: item.product,
+        unit_price: Number(item.unit_price),
         // image_url can be added if available
       }));
       await insertToSupabase(items);
@@ -128,6 +134,7 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (onSuccess) onSuccess();
     } catch (err) {
+      console.error('Error inserting to inventory:', err);
       setError('Failed to insert items into inventory. Please try again.');
     } finally {
       setInserting(false);
