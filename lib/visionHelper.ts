@@ -1,8 +1,14 @@
 import vision from '@google-cloud/vision';
 
-const client = new vision.ImageAnnotatorClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+const client = new vision.ImageAnnotatorClient(
+  process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+    ? {
+        credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON),
+      }
+    : {
+        keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      }
+);
 
 export default client;
 

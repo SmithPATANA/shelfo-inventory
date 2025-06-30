@@ -144,6 +144,8 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
   return (
     <div className="w-full max-w-md mx-auto mb-6 p-4 bg-white rounded-lg shadow-sm flex flex-col gap-4">
       <label className="block text-base font-semibold text-gray-800 mb-1 text-center">Add Stock from Photo/Receipt</label>
+      
+      {/* Camera input */}
       <input
         type="file"
         accept="image/*"
@@ -152,13 +154,53 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
         onChange={handleFileChange}
         capture="environment"
       />
-      <button
-        type="button"
-        className="w-full py-3 px-4 rounded-lg bg-[#635bff] text-white font-semibold text-base shadow hover:bg-[#4f46e5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#635bff] transition-all"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        {selectedFile ? 'Change Photo' : 'Take Photo / Upload'}
-      </button>
+      
+      {/* Gallery input */}
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        id="gallery-input"
+        onChange={handleFileChange}
+      />
+      
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className="flex-1 py-3 px-4 rounded-lg bg-[#635bff] text-white font-semibold text-sm shadow hover:bg-[#4f46e5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#635bff] transition-all"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          📷 Take Photo
+        </button>
+        <button
+          type="button"
+          className="flex-1 py-3 px-4 rounded-lg bg-green-600 text-white font-semibold text-sm shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition-all"
+          onClick={() => document.getElementById('gallery-input')?.click()}
+        >
+          📁 Upload from Gallery
+        </button>
+      </div>
+      
+      {selectedFile && (
+        <button
+          type="button"
+          className="w-full py-2 px-4 rounded-lg bg-gray-500 text-white font-semibold text-sm shadow hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all"
+          onClick={() => {
+            setSelectedFile(null);
+            setImagePreview(null);
+            setExtractedText('');
+            setParsedItems([]);
+            setError(null);
+            setSuccess(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            if (document.getElementById('gallery-input') as HTMLInputElement) {
+              (document.getElementById('gallery-input') as HTMLInputElement).value = '';
+            }
+          }}
+        >
+          ✕ Clear Selection
+        </button>
+      )}
       {imagePreview && (
         <img
           src={imagePreview}
