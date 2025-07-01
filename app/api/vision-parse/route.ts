@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
       const jsonString = codeBlockMatch ? codeBlockMatch[1] : parsed;
       products = jsonString ? JSON.parse(jsonString) : [];
     } catch (err) {
+      // console.error(err); // preserved for fallback
       // fallback: return empty array if parsing fails
       products = [];
     }
