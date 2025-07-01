@@ -70,8 +70,7 @@ export default function SnapAndStockPage() {
         setStep(2);
       };
       reader.onerror = () => setError('Failed to read image file.');
-    } catch (err) {
-      // console.error(err); // preserved for fallback
+    } catch {
       setError('Failed to process image.');
     } finally {
       setLoading(false);
@@ -133,8 +132,7 @@ export default function SnapAndStockPage() {
       if (error) throw error;
       setToast('Stock added successfully!');
       setStep(3);
-    } catch (err) {
-      // console.error(err); // preserved for fallback
+    } catch {
       setError('Failed to add items to inventory.');
       setToast('Failed to add items to inventory.');
     } finally {
@@ -177,8 +175,13 @@ export default function SnapAndStockPage() {
                   📷 Take Photo / Upload
                 </button>
               </div>
+              {/* Consider using <Image /> from 'next/image' for optimization */}
               {imagePreview && (
-                <img src={imagePreview} alt="Preview" className="w-full max-w-xs mx-auto rounded-lg border border-gray-200 object-contain mb-4" />
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full max-w-xs mx-auto rounded-lg border border-gray-200 object-contain mb-4"
+                />
               )}
               {selectedFile && (
                 <button type="button" className="w-full py-3 px-4 rounded-lg bg-green-600 text-white font-semibold text-lg shadow hover:bg-green-700 mb-2" onClick={handleProcessImage} disabled={loading}>

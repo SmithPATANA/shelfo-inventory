@@ -43,8 +43,7 @@ export async function POST(req: NextRequest) {
       const codeBlockMatch = parsed?.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
       const jsonString = codeBlockMatch ? codeBlockMatch[1] : parsed;
       products = jsonString ? JSON.parse(jsonString) : [];
-    } catch (err) {
-      // console.error(err); // preserved for fallback
+    } catch {
       // fallback: return empty array if parsing fails
       products = [];
     }
