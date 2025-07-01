@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import vision from '@google-cloud/vision';
+import { extractTextFromImage } from '@/lib/visionHelper';
 
 const client = new vision.ImageAnnotatorClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
@@ -8,6 +9,11 @@ const client = new vision.ImageAnnotatorClient({
 export const runtime = 'nodejs'; // Ensure this runs on the Node.js runtime
 
 export async function POST(req: NextRequest) {
+  // Feature toggle: disable this route when GPT Vision is active
+  if (process.env.USE_GPT_VISION === "true") {
+    return NextResponse.json({ message: "This route is disabled because GPT Vision is active." }, { status: 403 });
+  }
+
   try {
     // Parse multipart form data
     const formData = await req.formData();

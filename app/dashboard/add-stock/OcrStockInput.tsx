@@ -208,6 +208,8 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
           className="w-full max-w-xs mx-auto rounded-lg border border-gray-200 object-contain"
         />
       )}
+      {/* Google OCR + GPT functionality - DISABLED when USE_GPT_VISION=true */}
+      {/* 
       {selectedFile && !loading && !extractedText && (
         <button
           type="button"
@@ -225,12 +227,6 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
           </svg>
           <span className="text-gray-500">Extracting text...</span>
         </div>
-      )}
-      {error && (
-        <div className="w-full p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm text-center">{error}</div>
-      )}
-      {success && (
-        <div className="w-full p-3 bg-green-50 border border-green-200 rounded text-green-600 text-sm text-center">{success}</div>
       )}
       {extractedText && (
         <div className="w-full">
@@ -260,6 +256,13 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
             </div>
           )}
         </div>
+      )}
+      */}
+      {error && (
+        <div className="w-full p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm text-center">{error}</div>
+      )}
+      {success && (
+        <div className="w-full p-3 bg-green-50 border border-green-200 rounded text-green-600 text-sm text-center">{success}</div>
       )}
       {parsedItems.length > 0 && (
         <div className="w-full flex flex-col flex-1 justify-between">

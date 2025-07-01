@@ -7,6 +7,11 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: NextRequest) {
+  // Feature toggle: disable this route when GPT Vision is active
+  if (process.env.USE_GPT_VISION === "true") {
+    return NextResponse.json({ message: "This route is disabled because GPT Vision is active." }, { status: 403 });
+  }
+
   try {
     const { rawText } = await req.json();
     if (!rawText) {
