@@ -21,8 +21,11 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [extractedText, setExtractedText] = useState<string>('');
   const [parsedItems, setParsedItems] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [parsing, setParsing] = useState(false);
+  /*
+    PRESERVED FOR GOOGLE OCR FALLBACK
+    const [loading, setLoading] = useState(false);
+    const [parsing, setParsing] = useState(false);
+  */
   const [inserting, setInserting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -49,55 +52,58 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
     }
   };
 
-  const handleExtractText = async () => {
-    if (!selectedFile) return;
-    setLoading(true);
-    setExtractedText('');
-    setParsedItems([]);
-    setError(null);
-    setSuccess(null);
-    try {
-      // Upload file to /api/ocr-upload
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      const response = await fetch('/api/ocr-upload', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!response.ok) throw new Error('Failed to extract text');
-      const data = await response.json();
-      setExtractedText(data.text || '');
-    } catch (err) {
-      console.error('Error extracting text:', err);
-      setError('Failed to extract text. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  /*
+    PRESERVED FOR GOOGLE OCR FALLBACK
+    const handleExtractText = async () => {
+      if (!selectedFile) return;
+      setLoading(true);
+      setExtractedText('');
+      setParsedItems([]);
+      setError(null);
+      setSuccess(null);
+      try {
+        // Upload file to /api/ocr-upload
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        const response = await fetch('/api/ocr-upload', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) throw new Error('Failed to extract text');
+        const data = await response.json();
+        setExtractedText(data.text || '');
+      } catch (err) {
+        console.error('Error extracting text:', err);
+        setError('Failed to extract text. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleParseText = async () => {
-    if (!extractedText) return;
-    setParsing(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const response = await fetch('/api/parse-ocr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ rawText: extractedText }),
-      });
-      if (!response.ok) throw new Error('Failed to parse text');
-      const data = await response.json();
-      setParsedItems(data.products || []);
-    } catch (err) {
-      console.error('Error parsing text:', err);
-      setError('Failed to parse text. Please try again.');
-    } finally {
-      setParsing(false);
-    }
-  };
+    const handleParseText = async () => {
+      if (!extractedText) return;
+      setParsing(true);
+      setError(null);
+      setSuccess(null);
+      try {
+        const response = await fetch('/api/parse-ocr', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ rawText: extractedText }),
+        });
+        if (!response.ok) throw new Error('Failed to parse text');
+        const data = await response.json();
+        setParsedItems(data.products || []);
+      } catch (err) {
+        console.error('Error parsing text:', err);
+        setError('Failed to parse text. Please try again.');
+      } finally {
+        setParsing(false);
+      }
+    };
+  */
 
   const handleInsertToInventory = async () => {
     if (!parsedItems.length) return;
