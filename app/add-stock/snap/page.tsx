@@ -71,6 +71,7 @@ export default function SnapAndStockPage() {
       };
       reader.onerror = () => setError('Failed to read image file.');
     } catch (err) {
+      // console.error(err); // preserved for fallback
       setError('Failed to process image.');
     } finally {
       setLoading(false);
@@ -99,7 +100,7 @@ export default function SnapAndStockPage() {
       } else if (!item.quantity || item.quantity <= 0) {
         newFieldErrors[idx] = 'Quantity must be a positive number.';
         hasError = true;
-      } else if (item.purchase_price < 0 || item.selling_price < 0) {
+      } else if ((item.purchase_price ?? 0) < 0 || (item.selling_price ?? 0) < 0) {
         newFieldErrors[idx] = 'Prices must be positive numbers.';
         hasError = true;
       }
@@ -133,6 +134,7 @@ export default function SnapAndStockPage() {
       setToast('Stock added successfully!');
       setStep(3);
     } catch (err) {
+      // console.error(err); // preserved for fallback
       setError('Failed to add items to inventory.');
       setToast('Failed to add items to inventory.');
     } finally {
