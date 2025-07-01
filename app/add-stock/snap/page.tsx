@@ -41,42 +41,7 @@ export default function SnapAndStockPage() {
     }
   };
 
-  // Step 2: Process image with GPT Vision
-  const handleProcessImage = async () => {
-    if (!selectedFile) return;
-    setLoading(true);
-    setError(null);
-    setToast(null);
-    setParsedProducts([]);
-    try {
-      // Convert to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(selectedFile);
-      reader.onload = async () => {
-        const base64 = (reader.result as string).replace(/^data:image\/\w+;base64,/, '');
-        // Call API
-        const res = await fetch('/api/vision-parse', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64 }),
-        });
-        if (!res.ok) throw new Error('Failed to process image');
-        const data = await res.json();
-        if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
-          setError('No products detected in the image. Please try again with a clearer photo.');
-          setStep(1);
-          return;
-        }
-        setParsedProducts(data.products || []);
-        setStep(2);
-      };
-      reader.onerror = () => setError('Failed to read image file.');
-    } catch {
-      setError('Failed to process image.');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   // Step 3: Handle product edits
   const handleProductChange = (idx: number, field: keyof ParsedProduct, value: string | number) => {
