@@ -19,7 +19,6 @@ interface StockItem {
 export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [extractedText, setExtractedText] = useState<string>('');
   const [parsedItems, setParsedItems] = useState<StockItem[]>([]);
   const [inserting, setInserting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +33,6 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
-    setExtractedText('');
     setParsedItems([]);
     setError(null);
     setSuccess(null);
@@ -77,7 +75,6 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
       setSuccess(`Added ${items.length} item(s) to inventory!`);
       setSelectedFile(null);
       setImagePreview(null);
-      setExtractedText('');
       setParsedItems([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (onSuccess) onSuccess();
@@ -136,7 +133,6 @@ export default function OcrStockInput({ onSuccess }: { onSuccess?: () => void })
           onClick={() => {
             setSelectedFile(null);
             setImagePreview(null);
-            setExtractedText('');
             setParsedItems([]);
             setError(null);
             setSuccess(null);
