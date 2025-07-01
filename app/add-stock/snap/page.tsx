@@ -1,4 +1,3 @@
-// Trivial change to trigger redeploy
 'use client';
 
 import { useState } from 'react';
@@ -20,12 +19,13 @@ interface ParsedProduct {
 export default function SnapAndStockPage() {
   const [step, setStep] = useState(1);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [parsedProducts, setParsedProducts] = useState<ParsedProduct[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<number, string>>({});
+  const [extractedText, setExtractedText] = useState<string>('');
 
   // Step 1: Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,28 +33,90 @@ export default function SnapAndStockPage() {
     setSelectedFile(file);
     setError(null);
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
+      // Show file name for preview
+      setFilePreview(file.name);
     } else {
-      setImagePreview(null);
+      setFilePreview(null);
     }
   };
 
+  // Step 2: Upload document and extract text
+  const handleUploadDocument = async () => {
+    if (!selectedFile) return;
+    setLoading(true);
+    setError(null);
+    setToast(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      const res = await fetch('/api/ocr-upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) throw new Error('Failed to upload document');
+      const data = await res.json();
+      
+      if (!data.text || data.text.trim() === '') {
+        setError('No text could be extracted from the document. Please try a clearer image or different document.');
+        return;
+      }
+      
+      setExtractedText(data.text);
+      setStep(2);
+    } catch (err) {
+      setError('Failed to process document. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Step 3: Parse products with GPT
+  const handleParseProducts = async () => {
+    if (!extractedText) return;
+    setLoading(true);
+    setError(null);
+    setToast(null);
+    
+    try {
+      const res = await fetch('/api/parse-ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: extractedText }),
+      });
+      
+      if (!res.ok) throw new Error('Failed to parse products');
+      const data = await res.json();
+      
+      if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
+        setError('No products detected in the document. Please try again with a different document.');
+        return;
+      }
+      
+      setParsedProducts(data.products);
+      setStep(3);
+    } catch (err) {
+      setError('Failed to parse products from document.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Step 3: Handle product edits
+  // Step 4: Handle product edits
   const handleProductChange = (idx: number, field: keyof ParsedProduct, value: string | number) => {
     setParsedProducts(products => products.map((p, i) => i === idx ? { ...p, [field]: value } : p));
     setFieldErrors(errors => ({ ...errors, [idx]: '' }));
   };
 
-  // Step 4: Validate and submit all to inventory
+  // Step 5: Validate and submit all to inventory
   const handleSubmitAll = async () => {
     setLoading(true);
     setError(null);
     setToast(null);
     setFieldErrors({});
+    
     // Validate fields
     let hasError = false;
     const newFieldErrors: Record<number, string> = {};
@@ -70,17 +132,20 @@ export default function SnapAndStockPage() {
         hasError = true;
       }
     });
+    
     if (hasError) {
       setFieldErrors(newFieldErrors);
       setLoading(false);
       setToast('Please fix the errors in the highlighted products.');
       return;
     }
+    
     try {
       // Get user_id from Supabase Auth
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user.id;
       if (!userId) throw new Error('User not authenticated');
+      
       // Prepare items for insert
       const items = parsedProducts.map(item => ({
         name: item.name,
@@ -94,11 +159,13 @@ export default function SnapAndStockPage() {
         notes: item.notes || '',
         user_id: userId,
       }));
+      
       const { error } = await supabase.from('products').insert(items);
       if (error) throw error;
+      
       setToast('Stock added successfully!');
-      setStep(3);
-    } catch {
+      setStep(4);
+    } catch (err) {
       setError('Failed to add items to inventory.');
       setToast('Failed to add items to inventory.');
     } finally {
@@ -119,44 +186,77 @@ export default function SnapAndStockPage() {
           </div>
         </div>
       )}
+      
       {toast && (
         <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-[#635bff] text-white px-6 py-3 rounded shadow-lg font-semibold text-base animate-fade-in-out">
           {toast}
         </div>
       )}
+      
       <div className="max-w-2xl w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow px-6 py-8 flex flex-col items-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">Snap & Stock</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">Smart Stock Entry (AI Powered)</h1>
           <div className="mb-6 flex gap-2 items-center justify-center">
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 1 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>1️⃣ Upload</span>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 2 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>2️⃣ Review</span>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 3 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>3️⃣ Done</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 1 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>1️⃣ Upload File</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 2 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>2️⃣ AI Reads</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 3 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>3️⃣ Review & Edit</span>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${step === 4 ? 'bg-[#635bff] text-white' : 'bg-gray-200 text-gray-700'}`}>4️⃣ Success!</span>
           </div>
+          
           {step === 1 && (
             <>
-              <p className="mb-4 text-gray-500 text-center">Take or upload a photo/receipt to add stock using GPT Vision.</p>
-              <input type="file" accept="image/*" className="hidden" id="snap-upload" onChange={handleFileChange} />
+              <p className="mb-4 text-gray-500 text-center">Snap, Upload, and Let AI Handle Your Stock! Upload a receipt or invoice and let our AI do the heavy lifting.</p>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp" className="hidden" id="document-upload" onChange={handleFileChange} />
               <div className="flex gap-4 mb-4">
-                <button type="button" className="py-3 px-6 rounded-lg bg-[#635bff] text-white font-semibold text-lg shadow hover:bg-[#4f46e5]" onClick={() => document.getElementById('snap-upload')?.click()}>
-                  📷 Take Photo / Upload
+                <button type="button" className="py-3 px-6 rounded-lg bg-[#635bff] text-white font-semibold text-lg shadow hover:bg-[#4f46e5] flex items-center gap-2" onClick={() => document.getElementById('document-upload')?.click()}>
+                  <span>🤖</span> Upload & Let AI Read
                 </button>
               </div>
-              {/* Consider using <Image /> from 'next/image' for optimization */}
-              {imagePreview && (
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full max-w-xs mx-auto rounded-lg border border-gray-200 object-contain mb-4"
-                />
+              
+              {filePreview && (
+                <div className="w-full max-w-xs mx-auto p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">File Ready for AI Magic:</p>
+                    <p className="font-medium text-gray-800">{filePreview}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="ml-4 text-red-500 hover:text-red-700 text-xl"
+                    aria-label="Remove file"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setFilePreview(null);
+                    }}
+                    title="Remove file"
+                  >
+                    ❌
+                  </button>
+                </div>
               )}
+              
               {selectedFile && (
-                <button type="button" className="w-full py-3 px-4 rounded-lg bg-green-600 text-white font-semibold text-lg shadow hover:bg-green-700 mb-2" onClick={handleProcessImage} disabled={loading}>
-                  {loading ? 'Processing...' : 'Continue'}
+                <button type="button" className="w-full py-3 px-4 rounded-lg bg-green-600 text-white font-semibold text-lg shadow hover:bg-green-700 mb-2" onClick={handleUploadDocument} disabled={loading}>
+                  {loading ? 'Processing...' : '✨ Scan with AI ✨'}
                 </button>
               )}
             </>
           )}
+          
           {step === 2 && (
+            <>
+              <h2 className="text-lg font-semibold text-gray-800 mb-2 text-center">Text Extraction Complete</h2>
+              <div className="w-full mb-4">
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{extractedText}</p>
+                </div>
+              </div>
+              <button type="button" className="w-full py-3 px-4 rounded-lg bg-blue-600 text-white font-semibold text-lg shadow hover:bg-blue-700 mb-2" onClick={handleParseProducts} disabled={loading}>
+                {loading ? 'Parsing...' : 'Parse Products with GPT'}
+              </button>
+            </>
+          )}
+          
+          {step === 3 && (
             <>
               <h2 className="text-lg font-semibold text-gray-800 mb-2 text-center">Review & Edit Items</h2>
               <div className="space-y-4 w-full mb-4">
@@ -180,7 +280,8 @@ export default function SnapAndStockPage() {
               </button>
             </>
           )}
-          {step === 3 && (
+          
+          {step === 4 && (
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-green-600 mb-4">Stock Added!</h2>
               <p className="text-gray-700 mb-6">All items have been added to your inventory.</p>
@@ -189,7 +290,9 @@ export default function SnapAndStockPage() {
               </Link>
             </div>
           )}
+          
           {error && <div className="w-full p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm text-center mt-4">{error}</div>}
+          
           <div className="mt-8 w-full flex justify-center">
             <Link href="/add-stock" className="inline-block px-6 py-2 rounded-md bg-purple-600 text-white font-medium shadow hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
               ← Back
