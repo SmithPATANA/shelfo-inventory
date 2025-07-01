@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import vision from '@google-cloud/vision';
-import { extractTextFromImage } from '@/lib/visionHelper';
+// import { extractTextFromImage } from '@/lib/visionHelper'; // preserved for fallback
 
 const client = new vision.ImageAnnotatorClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
