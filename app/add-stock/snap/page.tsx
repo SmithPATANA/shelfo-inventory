@@ -205,7 +205,9 @@ export default function SnapAndStockPage() {
           
           {step === 1 && (
             <>
-              <p className="mb-4 text-gray-500 text-center">Snap, Upload, and Let AI Handle Your Stock! Upload a receipt or invoice and let our AI do the heavy lifting.</p>
+              <p className="mb-4 text-lg font-semibold text-[#635bff] bg-[#f5f3ff] px-4 py-3 rounded-lg shadow-sm border border-[#e0e7ff] text-center">
+                AI will capture your stock details from your document
+              </p>
               <input type="file" accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp" className="hidden" id="document-upload" onChange={handleFileChange} />
               <div className="flex gap-4 mb-4">
                 <button type="button" className="py-3 px-6 rounded-lg bg-[#635bff] text-white font-semibold text-lg shadow hover:bg-[#4f46e5] flex items-center gap-2" onClick={() => document.getElementById('document-upload')?.click()}>
