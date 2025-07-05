@@ -51,54 +51,27 @@ export default function SnapAndStockPage() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       
-      const res = await fetch('/api/ocr-upload', {
+      const response = await fetch('/api/document-parse', {
         method: 'POST',
         body: formData,
       });
       
-      if (!res.ok) throw new Error('Failed to upload document');
-      const data = await res.json();
+      if (!response.ok) throw new Error('Failed to upload document');
+      const data = await response.json();
       
       if (!data.text || data.text.trim() === '') {
         setError('No text could be extracted from the document. Please try a clearer image or different document.');
         return;
       }
-      
       setExtractedText(data.text);
-      setStep(2);
+      if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+        setParsedProducts(data.products);
+        setStep(3); // Go directly to review step
+      } else {
+        setError('No products detected in the document. Please try again with a different document.');
+      }
     } catch (err) {
       setError('Failed to process document. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 3: Parse products with GPT
-  const handleParseProducts = async () => {
-    if (!extractedText) return;
-    setLoading(true);
-    setError(null);
-    setToast(null);
-    
-    try {
-      const res = await fetch('/api/parse-ocr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: extractedText }),
-      });
-      
-      if (!res.ok) throw new Error('Failed to parse products');
-      const data = await res.json();
-      
-      if (!data.products || !Array.isArray(data.products) || data.products.length === 0) {
-        setError('No products detected in the document. Please try again with a different document.');
-        return;
-      }
-      
-      setParsedProducts(data.products);
-      setStep(3);
-    } catch (err) {
-      setError('Failed to parse products from document.');
     } finally {
       setLoading(false);
     }
@@ -208,7 +181,7 @@ export default function SnapAndStockPage() {
               <p className="mb-4 text-lg font-semibold text-[#635bff] bg-[#f5f3ff] px-4 py-3 rounded-lg shadow-sm border border-[#e0e7ff] text-center">
                 AI will capture your stock details from your document
               </p>
-              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp" className="hidden" id="document-upload" onChange={handleFileChange} />
+              <input type="file" name="file" accept=".pdf,.docx,.jpg,.jpeg,.png,.tiff,.bmp" className="hidden" id="document-upload" onChange={handleFileChange} />
               <div className="flex gap-4 mb-4">
                 <button type="button" className="py-3 px-6 rounded-lg bg-[#635bff] text-white font-semibold text-lg shadow hover:bg-[#4f46e5] flex items-center gap-2" onClick={() => document.getElementById('document-upload')?.click()}>
                   <span>🤖</span> Upload & Let AI Read
@@ -252,9 +225,6 @@ export default function SnapAndStockPage() {
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">{extractedText}</p>
                 </div>
               </div>
-              <button type="button" className="w-full py-3 px-4 rounded-lg bg-blue-600 text-white font-semibold text-lg shadow hover:bg-blue-700 mb-2" onClick={handleParseProducts} disabled={loading}>
-                {loading ? 'Parsing...' : 'Parse Products with GPT'}
-              </button>
             </>
           )}
           

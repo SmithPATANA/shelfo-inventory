@@ -1,10 +1,16 @@
 import { useState, useRef } from 'react';
-import { extractTextFromImage } from '@/lib/visionHelper';
 import { insertToSupabase } from '@/lib/insertStock';
 
 type StockItem = {
-  product: string;
+  supplier: string;
+  productType: string;
+  productName: string;
   quantity: number;
+  weightKg: number | null;
+  size: string;
+  purchasePrice: number | null;
+  sellingPrice: number | null;
+  product: string;
   unit_price: number;
 };
 
@@ -44,8 +50,27 @@ export default function OcrUpload() {
     setError(null);
     setSuccess(null);
     try {
-      const text = await extractTextFromImage(selectedFile);
-      setExtractedText(text);
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const response = await fetch('/api/document-parse', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
+      console.log("API result", result);
+      if (result.success && result.extracted) {
+        try {
+          const parsed = JSON.parse(result.extracted);
+          console.log("parsed inventory data", parsed);
+          setParsedItems(parsed);
+          setError(null);
+        } catch (err) {
+          console.error("JSON parse failed", err);
+          setError("Error parsing GPT response");
+        }
+      } else {
+        setError("No text could be extracted from the document.");
+      }
     } catch (err) {
       console.error('Error extracting text:', err);
       setError('Failed to extract text. Please try again.');
@@ -82,25 +107,19 @@ export default function OcrUpload() {
     }
   };
 
-  const handleInsertToInventory = async () => {
-    if (!parsedItems.length) return;
+  const handleInsertItems = async (items: StockItem[]) => {
     setInserting(true);
-    setError(null);
-    setSuccess(null);
     try {
-      await insertToSupabase(parsedItems);
-      setSuccess(`Successfully added ${parsedItems.length} item(s) to inventory!`);
-      // Reset form
-      setSelectedFile(null);
-      setImagePreview(null);
-      setExtractedText('');
-      setParsedItems([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      const { success, error } = await insertToSupabase(items);
+      if (success) {
+        setSuccess("Items saved to inventory!");
+        setParsedItems([]);
+      } else {
+        setError(error ?? "Failed to insert items.");
       }
-    } catch (err) {
-      console.error('Error inserting to inventory:', err);
-      setError('Failed to insert items into inventory. Please try again.');
+    } catch (e) {
+      console.error(e);
+      setError("Unexpected error.");
     } finally {
       setInserting(false);
     }
@@ -207,38 +226,39 @@ export default function OcrUpload() {
       )}
       
       {parsedItems.length > 0 && (
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Parsed Items ({parsedItems.length})</label>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {parsedItems.map((item, index) => (
-              <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="font-medium text-gray-900">{item.product}</div>
-                <div className="text-sm text-gray-600">
-                  Qty: {item.quantity} | Price: ${item.unit_price}
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {!inserting && (
-            <button
-              type="button"
-              className="w-full mt-3 py-3 px-4 rounded-lg bg-green-600 text-white font-semibold text-base shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition-all"
-              onClick={handleInsertToInventory}
-            >
-              Add to Inventory
-            </button>
-          )}
-          
-          {inserting && (
-            <div className="flex flex-col items-center w-full py-4">
-              <svg className="animate-spin h-8 w-8 text-green-600 mb-2" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span className="text-gray-500">Adding to inventory...</span>
-            </div>
-          )}
+        <div className="review w-full">
+          <h3 className="text-lg font-semibold mb-2">Review Extracted Inventory</h3>
+          <table className="w-full border text-sm mb-4">
+            <thead>
+              <tr>
+                <th className="border px-2 py-1">Supplier</th>
+                <th className="border px-2 py-1">Product</th>
+                <th className="border px-2 py-1">Qty</th>
+                <th className="border px-2 py-1">Weight</th>
+                <th className="border px-2 py-1">Purchase Price</th>
+                <th className="border px-2 py-1">Selling Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parsedItems.map((item, idx) => (
+                <tr key={idx}>
+                  <td className="border px-2 py-1">{item.supplier}</td>
+                  <td className="border px-2 py-1">{item.productName}</td>
+                  <td className="border px-2 py-1">{item.quantity}</td>
+                  <td className="border px-2 py-1">{item.weightKg ?? '-'}</td>
+                  <td className="border px-2 py-1">{item.purchasePrice ?? '-'}</td>
+                  <td className="border px-2 py-1">{item.sellingPrice ?? '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button
+            onClick={() => handleInsertItems(parsedItems)}
+            className="w-full py-3 px-4 rounded-lg bg-green-600 text-white font-semibold text-base shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-600 transition-all"
+            disabled={inserting}
+          >
+            {inserting ? "Saving..." : "✅ Confirm and Save to Inventory"}
+          </button>
         </div>
       )}
     </div>
