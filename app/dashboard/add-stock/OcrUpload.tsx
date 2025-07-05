@@ -110,12 +110,12 @@ export default function OcrUpload() {
   const handleInsertItems = async (items: StockItem[]) => {
     setInserting(true);
     try {
-      const { success, error } = await insertToSupabase(items);
-      if (success) {
+      const result = await insertToSupabase(items);
+      if (result) {
         setSuccess("Items saved to inventory!");
         setParsedItems([]);
       } else {
-        setError(error ?? "Failed to insert items.");
+        setError("Failed to insert items.");
       }
     } catch (e) {
       console.error(e);

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "banded-access-463820-i0",
+  "private_key_id": "38ecf7c3ed797a5ca9e24513398bd1dbb5ea2963",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDPrLBjfzoA6PR2\n4WfNszocqFdPOw6qipqvLS7GYCu5O+rlDA0MB1cfFUyInvClAa2G/26ZU85XBPi1\ndlmMvt0+XSHd/bHy4hbOIlYB8dXDPNVPuMFmuY8GlMgx5+WneoqRoa6s/SAlkQUt\nZpXGWMbGN3D4jfGB+ndRFIBN6swECXTdw7E3mZVKZeQfpGS4HtDnPdSnQGosVjE3\n4Fts82ZCYOfSES+X5aL7DEijK2BTpgpJhxyJfV7F0KYdlz2IpD+7lIf5zq9/2DB0\nEE+QUyreXxTGWVVxiqKpU+jN95vzA09wWhNwy5M5Zn+TeRX+6sKKsLHqAZs5hWXO\nrCUnUOGjAgMBAAECggEAC05ri/8xOTt1k8NR03EeiNDhb/7XHZHOOhtLoKE7wCny\n7+VoEG+V3qtaL1X35APjXqYpb0+QvEwY/kgjN/ZsNSj83wkg1whYFYDpDdIMwURe\nmKiGXwFbOBCBlbX6WtPhF2ymBeUCCwmKLp6XKOVMbR43mFCiBWGNfWyQT62ozc9c\n3OR2l9UgEgaXeFTzh5yyUd/MzqJLe45rGBK/fo8yPILfBvXjGSeHRVH6rftHror+\nZ02WBbfStbrYy244ZGnZ/nBUsa3hyHgk8T0j4GBDXCTZ+a7y10sgraoq+DcY+aPf\n14iEkTKOOgn5kh/7xUXE0Z/PT33rRRj+2ximkrkMgQKBgQDwISYH/efkWsDdRaiI\nEc0+7IJwSefhl0ZZWuv5zXzdSRBvqqcDFWRsdcLdA0ogwUigzYZjsYa6tuRfVu7y\nH6awBVZghpTnYcVweBsnktiGltVGdHmx4ZUCn0Vfi1CreOMqtzIFL2DAFpLe/4Xq\nzF8qePfKUgfCV79+6kTieDcmlwKBgQDdZmwMN7SRbXHVkMUOQm2Oo1VQ9heFSuFy\nX/q57HjGH/qw2P/Wetq5neD0PLnPgz/ImiNaeNXkhVclCLyvGHiCfUA5rHCi7SVN\nqSdM517SdN5RS35PT9F3OqRNZPF5CLONhOXApMfaRK18H1F0SoretrMZAcoB/iqk\nBAIeR88q1QKBgAUbj2WIHxCaZZPPUYBjcIwwF64vxEDmKNbpui88EbXbQgA+DwNf\nxx0PfC+bTE5aDiNte7hPJGCAV2c3wCliRvdjhazT8ALj74Eu7NTwqK5kMvEmtRf1\nhmfh32Xi3rpm/d4Au42krlgnosQfh0exRSzwGcUx7XxSxX37ma9/gxzNAoGAY7uJ\nnI9TZddZWg0W12+RDpoBCrFwsviiSfV2al5doVIyiYuW47T/5nF6LktUoGfNSb41\ngsHACGsQcHxZEr8BOjbVwaUuMBaHoU47h+cJzeAbbZ+GTI/2GbFu5fY82HrU90EQ\nhhE0fdxGEg3BkZMqr1y5nOAzcWZfKvcrRRyv8+kCgYEAre8FAdRbewWpuEZ8jYvv\nNGum3Tfmy8+c1akEcZzb8lXTb1SYx5P7kwKnPhOItum2SX2FSnWx5d2cS5xwTUZu\nVZHxWEu4xEAFSVk5M1/HxZmZBTiRPQzim4R79G2iasMeKNo6dg+6Ig757odrvzjV\njejbZCA3cDSHCfnvrAdS+kI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "shelfo-ocr-service@banded-access-463820-i0.iam.gserviceaccount.com",
+  "client_id": "113466852685281325160",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/shelfo-ocr-service%40banded-access-463820-i0.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
