@@ -70,7 +70,7 @@ export default function SnapAndStockPage() {
       } else {
         setError('No products detected in the document. Please try again with a different document.');
       }
-    } catch {
+    } catch (_) {
       setError('Failed to process document. Please try again.');
     } finally {
       setLoading(false);
@@ -138,7 +138,7 @@ export default function SnapAndStockPage() {
       
       setToast('Stock added successfully!');
       setStep(4);
-    } catch {
+    } catch (_) {
       setError('Failed to add items to inventory.');
       setToast('Failed to add items to inventory.');
     } finally {
